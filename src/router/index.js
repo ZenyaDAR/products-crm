@@ -8,6 +8,7 @@ const router = createRouter({
       path: '/',
       name: 'home',
       component: HomeView,
+      meta: { requiresAuth: true }
     },
     {
       path: '/about',
@@ -16,13 +17,29 @@ const router = createRouter({
       // this generates a separate chunk (About.[hash].js) for this route
       // which is lazy-loaded when the route is visited.
       component: () => import('../views/AboutView.vue'),
+      meta: { requiresAuth: true }
     },
     {
       path: '/auth',
       name: 'authorization',
       component: () => import('../views/Authorization.vue'),
+      meta: { guestOnly: true }
     },
   ],
+})
+
+function isLoggedIn() {
+  return !!localStorage.getItem('token')
+}
+
+router.beforeEach((to) => {
+  if (to.meta.requiresAuth && !isLoggedIn()) {
+    return { name: 'authorization' }
+  }
+
+  if (to.meta.guestOnly && isLoggedIn()) {
+    return { name: 'home' }
+  }
 })
 
 export default router
