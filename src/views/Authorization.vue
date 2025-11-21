@@ -1,9 +1,10 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { login as loginApi } from '@/api/auth.js'
+import { useAuthStore } from '@/stores/auth'
 
 const router = useRouter()
+const authStore = useAuthStore()
 
 const login = ref('')
 const password = ref('')
@@ -15,13 +16,13 @@ const handleSubmit = async () => {
   loading.value = true
 
   try {
-    const response = await loginApi(login.value, password.value)
+    await authStore.login(login.value, password.value)
 
-    if (response.success) {
-      router.push('/')
-    }
+    await router.push('/') 
+    
   } catch (err) {
-    error.value = err.message || 'Ошибка авторизации'
+    error.value = 'Неверный логин или пароль'
+    console.error(err)
   } finally {
     loading.value = false
   }
