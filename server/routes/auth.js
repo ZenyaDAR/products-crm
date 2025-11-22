@@ -2,9 +2,13 @@ import express from 'express'
 import db from '../db.js'
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
+import dotenv from 'dotenv'
+dotenv.config()
+
 
 const router = express.Router()
-const JWT_SECRET = 'secret_key_123'
+const JWT_SECRET = process.env.JWT_SECRET
+const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN
 
 router.post('/login', async (req, res) => {
     try {
@@ -33,7 +37,7 @@ router.post('/login', async (req, res) => {
         const token = jwt.sign(
             { id: employee.EmployeeID, role: employee.Role },
             JWT_SECRET,
-            { expiresIn: '24h' }
+            { expiresIn: JWT_EXPIRES_IN }
         )
 
         res.json({
