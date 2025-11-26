@@ -13,7 +13,7 @@ const app = createApp(App)
 app.use(createPinia())
 
 const authStore = useAuthStore()
-authStore.init()
+authStore.checkToken()
 
 app.use(router)
 

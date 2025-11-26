@@ -60,12 +60,17 @@ const handleSubmit = async () => {
             autocomplete="current-password"
           />
         </div>
+        <div class="submit-button-group">
+          <div v-if="error" class="error-message">{{ error }}</div>
 
-        <div v-if="error" class="error-message">{{ error }}</div>
+          <button type="submit" class="submit-button" :disabled="loading">
+            {{ loading ? 'Вхід...' : 'Вхід' }}
+          </button>
+          kateryna.i <br>
+          admin
+        </div>
 
-        <button type="submit" class="submit-button" :disabled="loading">
-          {{ loading ? 'Вхід...' : 'Вхід' }}
-        </button>
+        
       </form>
     </div>
   </div>
@@ -75,6 +80,7 @@ const handleSubmit = async () => {
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600&family=Inter:wght@400&display=swap');
 
 .auth-container {
+  flex: 1;
   min-height: 100vh;
   display: flex;
   align-items: center;
@@ -87,14 +93,14 @@ const handleSubmit = async () => {
   display: flex;
   flex-direction: column;
   width: 100%;
-  height: 100vh;
+  height: fit-content;
   background: #ffffff;
   border: 1px solid #e5e7eb;
   border-radius: 25px;
   padding: 65px;
   box-shadow: none;
   max-width: 700px;
-  max-height: 600px;
+  max-height: fit-content;
 }
 
 .auth-title {
@@ -119,6 +125,11 @@ const handleSubmit = async () => {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+}
+.submit-button-group{
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
 }
 
 .form-label {

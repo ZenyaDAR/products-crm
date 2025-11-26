@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia';
 import axios from '@/api/axios';
+import { jwtDecode } from 'jwt-decode';
 
 export const useAuthStore = defineStore('auth', {
   state: () => ({
@@ -7,7 +8,7 @@ export const useAuthStore = defineStore('auth', {
     token: localStorage.getItem('token') || null
   }),
 
-actions: {
+  actions: {
     async login(login, password) {
       const response = await axios.post('/auth/login', { login, password });
 
@@ -25,7 +26,7 @@ actions: {
       localStorage.setItem('user', JSON.stringify(user));
 
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-      
+
       return true;
     },
 
@@ -36,10 +37,20 @@ actions: {
       localStorage.removeItem('user');
       delete axios.defaults.headers.common['Authorization'];
     },
-    
-    init() {
-      if (this.token) {
-        axios.defaults.headers.common['Authorization'] = `Bearer ${this.token}`;
+    checkToken() {
+      if (!this.token) return;
+
+      try {
+        const decoded = jwtDecode(this.token);
+        const now = Date.now() / 1000;
+
+        if (decoded.exp < now) {
+          this.logout();
+        } else {
+          axios.defaults.headers.common['Authorization'] = `Bearer ${this.token}`;
+        }
+      } catch {
+        this.logout();
       }
     }
   }
