@@ -1,5 +1,5 @@
 <script setup>
-import OrdersTable from '@/components/OrdersTable.vue'
+import OrdersTable from '@/components/ordersTable.vue'
 import OrdersActivity from '@/components/OrdersActivity.vue'
 import PredictiveSearch from '@/components/PredictiveSearch.vue'
 </script>

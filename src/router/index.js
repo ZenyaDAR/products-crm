@@ -26,7 +26,7 @@ const router = createRouter({
     {
       path: '/sales',
       name: 'sales',
-      component: () => import('../views/OrdersView.vue'),
+      component: () => import('../views/SalesView.vue'), 
       meta: { requiresAuth: true }
     },
     {

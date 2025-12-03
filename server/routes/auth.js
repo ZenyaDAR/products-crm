@@ -39,7 +39,7 @@ router.post('/login', async (req, res) => {
             JWT_SECRET,
             { expiresIn: JWT_EXPIRES_IN }
         )
-
+      
         res.json({
             success: true,
             token: token,
