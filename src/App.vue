@@ -13,6 +13,9 @@ const authStore = useAuthStore()
 
 
 <style>
+body {
+  font-family: 'Montserrat', sans-serif;
+}
 #app{
   display: flex;
   background: #F9FAFB;
