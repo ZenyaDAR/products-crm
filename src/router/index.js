@@ -32,7 +32,7 @@ const router = createRouter({
     {
       path: '/sales',
       name: 'sales',
-      component: () => import('../views/DeliveriesView.vue'),
+      component: () => import('../views/SalesView.vue'),
       meta: { requiresAuth: true }
     },
     {

@@ -3,6 +3,7 @@ import cors from 'cors'
 import dotenv from 'dotenv'
 import authRoutes from './routes/auth.js'
 import deliveriesRoutes from './routes/deliveries.js'
+import salesRoutes from './routes/sales.js'
 
 dotenv.config()
 
@@ -15,6 +16,7 @@ app.use(express.urlencoded({ extended: true }))
 
 app.use('/api/auth', authRoutes)
 app.use('/api/deliveries', deliveriesRoutes)
+app.use('/api/sales', salesRoutes)
 
 app.get('/health', (req, res) => {
     res.json({ status: 'OK' })
