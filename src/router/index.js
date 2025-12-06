@@ -7,32 +7,38 @@ const router = createRouter({
   routes: [
     {
       path: '/',
-      name: 'orders',
-      component: () => import('../views/OrdersView.vue'),
+      name: 'deliveries',
+      component: () => import('../views/DeliveriesView.vue'),
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/delivery/:id',
+      name: 'delivery',
+      component: () => import('../views/DeliveriesView.vue'),
       meta: { requiresAuth: true }
     },
     {
       path: '/warehouse',
       name: 'warehouse',
-      component: () => import('../views/OrdersView.vue'),
+      component: () => import('../views/DeliveriesView.vue'),
       meta: { requiresAuth: true }
     },
     {
       path: '/suppliers',
       name: 'suppliers',
-      component: () => import('../views/OrdersView.vue'),
+      component: () => import('../views/DeliveriesView.vue'),
       meta: { requiresAuth: true }
     },
     {
       path: '/sales',
       name: 'sales',
-      component: () => import('../views/OrdersView.vue'),
+      component: () => import('../views/DeliveriesView.vue'),
       meta: { requiresAuth: true }
     },
     {
       path: '/statistics',
       name: 'statistics',
-      component: () => import('../views/OrdersView.vue'),
+      component: () => import('../views/DeliveriesView.vue'),
       meta: { requiresAuth: true }
     },
     {

@@ -2,7 +2,7 @@
 <script setup>
 import { computed } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
-import IconOrders from './icons/IconOrders.vue'
+import IconOrders from './icons/IconDeliveries.vue'
 import IconWarehouse from './icons/IconWarehouse.vue'
 import IconSuppliers from './icons/IconSuppliers.vue'
 import IconSales from './icons/IconSales.vue'
@@ -22,15 +22,21 @@ const dayPart = computed(() => {
     if (hour < 18) return 'Добрий день'
     return 'Добрий вечір'
 })
+const adminName = computed(() => {
+   if (user.fullName.split(' ').length > 1) {
+    return user.fullName.split(' ')[1]
+   }
+   return user.fullName.split(' ')[0]
+})
 </script>
 
 <template>
     <aside class="aside-bar">
        <div class="aside-bar__logo">
-        {{ user.fullName.split(' ')[0] }}<br>{{ dayPart }}!
+        {{ adminName }}<br>{{ dayPart }}!
        </div>
        <div class="aside-bar__menu">
-         <RouterLink to="/" :class="{ 'active': $route.name === 'orders' }">
+         <RouterLink to="/" :class="{ 'active': $route.name === 'deliveries' || $route.name === 'delivery' }">
             <IconOrders /> Замовлення
          </RouterLink>
          <RouterLink to="/warehouse" :class="{ 'active': $route.name === 'warehouse' }">
