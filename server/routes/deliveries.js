@@ -25,8 +25,7 @@ async function fetchDeliveryWithDetails(connection, deliveryId) {
     const [items] = await connection.execute(`
         SELECT di.*, 
                p.Name AS ProductName, 
-               p.Unit, 
-               p.ProductType, 
+               p.Unit,
                p.PurchasePrice,
                p.RetailPrice,
                p.Brand
@@ -90,7 +89,7 @@ router.get('/:id/available-products', async (req, res) => {
 
         const [products] = await db.execute(
             `
-            SELECT SKU, Name, Unit, ProductType, PurchasePrice, RetailPrice, Supplier
+            SELECT SKU, Name, Unit, PurchasePrice, RetailPrice, Supplier
             FROM Products
             WHERE Supplier = ? 
               AND Status = 'active'
@@ -129,7 +128,7 @@ router.get('/suppliers/:supplierId/products', async (req, res) => {
         const supplierId = req.params.supplierId
         const [products] = await db.execute(
             `
-            SELECT SKU, Name, Unit, ProductType, PurchasePrice, RetailPrice 
+            SELECT SKU, Name, Unit, PurchasePrice, RetailPrice 
             FROM Products
             WHERE Supplier = ? AND Status = 'active'
             ORDER BY Name ASC
@@ -168,8 +167,7 @@ router.get('/:id', async (req, res) => {
         const [items] = await db.execute(`
             SELECT di.*, 
                    p.Name AS ProductName, 
-                   p.Unit, 
-                   p.ProductType, 
+                   p.Unit,
                    p.PurchasePrice,
                    p.RetailPrice,
                    p.Brand

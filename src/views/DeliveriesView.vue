@@ -444,7 +444,7 @@ const submitCreate = async () => {
                       v-model.number="item.Quantity"
                       type="number"
                       min="0"
-                      step="0.001"
+                      step="1"
                       placeholder="Кількість"
                       required
                       :disabled="isCompleted"
@@ -553,7 +553,7 @@ const submitCreate = async () => {
                     v-model.number="item.Quantity"
                     type="number"
                     min="0"
-                    step="0.001"
+                    step="1"
                     placeholder="Кількість"
                     required
                   />
