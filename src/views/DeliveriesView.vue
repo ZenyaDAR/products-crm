@@ -770,6 +770,7 @@ main {
 .primary-btn,
 .secondary-btn,
 .ghost-btn {
+  font-family: Montserrat;
   border: 1px solid transparent;
   border-radius: 8px;
   font-weight: 600;
