@@ -2,43 +2,55 @@
 import { useSalesStore } from '@/stores/sales'
 const store = useSalesStore()
 
-const currentMonth = new Date().toLocaleString('uk-UA', { month: 'long' })
+const currentMonth = new Date().toLocaleString('en-US', { month: 'long' })
 const capitalizedMonth = currentMonth.charAt(0).toUpperCase() + currentMonth.slice(1)
+
+const datePrev = new Date()
+datePrev.setMonth(datePrev.getMonth() - 1)
+const lastMonthName = datePrev.toLocaleString('en-US', { month: 'long' })
+const capitalizedLastMonth = lastMonthName.charAt(0).toUpperCase() + lastMonthName.slice(1)
+
+const datePrePrev = new Date()
+datePrePrev.setMonth(datePrePrev.getMonth() - 2)
+const prePrevMonthName = datePrePrev.toLocaleString('en-US', { month: 'long' })
+const capitalizedPrePrevMonth = prePrevMonthName.charAt(0).toUpperCase() + prePrevMonthName.slice(1)
 </script>
 
 <template>
   <div class="stats-grid">
-    
     <div class="card">
-      <div class="title">Загальний дохід ({{ capitalizedMonth }})</div>
-      <div class="value">{{ store.stats.monthIncome.toLocaleString() }} грн</div>
+      <div class="title">Total Revenue ({{ capitalizedMonth }})</div>
+      <div class="value">{{ store.stats.monthIncome.toLocaleString() }} ₴</div>
       <div :class="['change', store.stats.monthChange >= 0 ? 'positive' : 'negative']">
-        {{ store.stats.monthChange > 0 ? '+' : '' }}{{ store.stats.monthChange }}% за минулий місяць
+        {{ store.stats.monthChange > 0 ? '+' : '' }}{{ store.stats.monthChange }}% vs {{ capitalizedLastMonth }}
       </div>
     </div>
     
     <div class="card">
-      <div class="title">Загальний дохід за сьогодні</div>
-      <div class="value">{{ store.stats.dailyIncome.toLocaleString() }} грн</div>
+      <div class="title">Total Revenue Today</div>
+      <div class="value">{{ store.stats.dailyIncome.toLocaleString() }} ₴</div>
       <div :class="['change', store.stats.dailyIncomeChange >= 0 ? 'positive' : 'negative']">
-        {{ store.stats.dailyIncomeChange > 0 ? '+' : '' }}{{ store.stats.dailyIncomeChange }}% за вчора
+        {{ store.stats.dailyIncomeChange > 0 ? '+' : '' }}{{ store.stats.dailyIncomeChange }}% vs yesterday
       </div>
     </div>
 
     <div class="card">
-      <div class="title">Кількість продажів ({{ capitalizedMonth }})</div>
+      <div class="title">Total Sales ({{ capitalizedMonth }})</div>
       <div class="value">{{ store.stats.monthSalesCount }}</div>
-      
       <div :class="['change', store.stats.monthSalesChange >= 0 ? 'positive' : 'negative']">
-         {{ store.stats.monthSalesChange > 0 ? '+' : '' }}{{ store.stats.monthSalesChange }}% до минулого місяця
+         {{ store.stats.monthSalesChange > 0 ? '+' : '' }}{{ store.stats.monthSalesChange }}% vs {{ capitalizedLastMonth }}
       </div>
     </div>
 
     <div class="card">
-      <div class="title">Найпопулярніший товар за сьогодні</div>
-      <div class="sub-value">{{ store.stats.topProductToday }}</div>
-      <div class="count">{{ store.stats.topProductCount }} шт</div>
+      <div class="title">Total Revenue ({{ capitalizedLastMonth }})</div>
+      <div class="value">{{ store.stats.lastMonthIncome.toLocaleString() }} ₴</div>
+      
+      <div :class="['change', store.stats.lastMonthChange >= 0 ? 'positive' : 'negative']">
+         {{ store.stats.lastMonthChange > 0 ? '+' : '' }}{{ store.stats.lastMonthChange }}% vs {{ capitalizedPrePrevMonth }}
+      </div>
     </div>
+
   </div>
 </template>
 
@@ -47,7 +59,6 @@ const capitalizedMonth = currentMonth.charAt(0).toUpperCase() + currentMonth.sli
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   gap: 20px;
-  margin-bottom: 20px;
 }
 
 .card {
@@ -76,14 +87,6 @@ const capitalizedMonth = currentMonth.charAt(0).toUpperCase() + currentMonth.sli
   color: #111827;
 }
 
-.sub-value {
-  font-family: Montserrat;
-  font-size: 15px;
-  font-weight: 600;
-  color: #111827;
-  line-height: 1.2;
-}
-
 .change {
   font-family: Montserrat;
   font-size: 13px;
@@ -94,11 +97,4 @@ const capitalizedMonth = currentMonth.charAt(0).toUpperCase() + currentMonth.sli
 .positive { color: #10B981; }
 .negative { color: #EF4444; }
 .neutral { color: #9CA3AF; }
-
-.count {
-    font-size: 13px;
-    font-weight: 700;
-    color: #3f94ea;
-    margin-top: 5px;
-}
 </style>
