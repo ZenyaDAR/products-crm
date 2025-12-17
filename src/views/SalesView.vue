@@ -1,14 +1,16 @@
 <script setup>
-import { onMounted } from 'vue'
+import { onMounted, ref } from 'vue'
 import { useSalesStore } from '@/stores/sales'
 
-import PredictiveSearch from '@/components/PredictiveSearch.vue'
 import SalesStats from '@/components/SalesStats.vue'
 import SalesRecentTable from '@/components/SalesRecentTable.vue'
 import SalesChart from '@/components/SalesChart.vue'
 import SalesTopProducts from '@/components/SalesTopProducts.vue'
 
+import SalesAllOrdersModal from '@/components/SalesAllOrders.vue' 
+
 const store = useSalesStore()
+const isAllOrdersOpen = ref(false)
 
 onMounted(() => {
   store.fetchSalesData()
@@ -17,15 +19,14 @@ onMounted(() => {
 
 <template>
   <main class="sales-page">
-    <div class="search-section">
-        <PredictiveSearch />
+    
+    <div class="top-section">
+       <SalesStats />
     </div>
-
-    <SalesStats />
 
     <div class="middle-section">
       <div class="table-wrap">
-        <SalesRecentTable />
+        <SalesRecentTable @open-all="isAllOrdersOpen = true" />
       </div>
       <div class="chart-wrap">
         <SalesChart />
@@ -35,39 +36,50 @@ onMounted(() => {
     <div class="bottom-section">
       <SalesTopProducts />
     </div>
+    <SalesAllOrdersModal 
+        :isOpen="isAllOrdersOpen" 
+        :orders="store.recentOrders"
+        @close="isAllOrdersOpen = false"
+    />
+
   </main>
 </template>
 
 <style scoped>
 .sales-page {
   width: 100%;
+  height: 100vh;
   padding: 20px;
   display: flex;
   flex-direction: column;
   gap: 20px;
   box-sizing: border-box; 
-
-  overflow-x: hidden; 
-  max-width: 100%;
+  overflow: hidden; 
+  background: #f9fafb;
 }
 
-.search-section {
-    margin-bottom: 5px;
-}
+.top-section { flex-shrink: 0; }
 
 .middle-section {
+  flex: 1; 
+  min-height: 0; 
   display: grid;
-  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); 
+  grid-template-columns: 2fr 1fr; 
   gap: 20px;
-  align-items: start;
 }
 
-.bottom-section {
-  width: 100%;
+.table-wrap, .chart-wrap {
+  height: 100%;
+  min-height: 0; 
+  overflow: hidden;
 }
+
+.bottom-section { flex-shrink: 0; }
+
 @media (max-width: 1280px) {
-  .middle-section {
-    grid-template-columns: minmax(0, 1fr);
-  }
+  .sales-page { height: auto; overflow-y: auto; }
+  .middle-section { grid-template-columns: 1fr; flex: none; height: auto; }
+  .table-wrap { height: 500px; }
+  .chart-wrap { height: 400px; }
 }
 </style>

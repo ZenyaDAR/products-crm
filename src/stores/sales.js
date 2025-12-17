@@ -12,15 +12,14 @@ export const useSalesStore = defineStore('sales', {
       
       monthSalesCount: 0,
       monthSalesChange: 0,
-
-      topProductToday: 'Завантаження...',
-      topProductCount: 0
+      lastMonthIncome: 0, 
+      lastMonthChange: 0
     },
     recentOrders: [],
     topProducts: [],
     chartData: {
       labels: [],
-      datasets: [{ label: 'Продажі (грн)', backgroundColor: '#3B82F6', data: [] }]
+      datasets: [{ label: 'Sales (₴)', backgroundColor: '#3B82F6', data: [] }]
     }
   }),
   actions: {
@@ -30,15 +29,21 @@ export const useSalesStore = defineStore('sales', {
         const response = await axios.get('/sales/dashboard')
         const data = response.data
         
-        this.stats = data.stats
-        this.recentOrders = data.recentOrders
-        this.topProducts = data.topProducts
+        if (data.stats) {
+            this.stats = { 
+                ...this.stats, 
+                ...data.stats
+            }
+        }
+        
+        this.recentOrders = data.recentOrders || []
+        this.topProducts = data.topProducts || []
         
         if (data.chartData) {
           this.chartData = data.chartData
         }
       } catch (error) {
-        console.error('Помилка отримання даних:', error)
+        console.error('Error fetching data:', error)
       } finally {
         this.isLoading = false
       }

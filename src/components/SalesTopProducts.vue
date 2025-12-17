@@ -3,8 +3,13 @@ import { computed } from 'vue'
 import { useSalesStore } from '@/stores/sales'
 const store = useSalesStore()
 
+const topThreeProducts = computed(() => {
+    return store.topProducts.slice(0, 3)
+})
+
 const maxCount = computed(() => {
-    return Math.max(...store.topProducts.map(p => p.count), 1)
+    if (topThreeProducts.value.length === 0) return 1
+    return Math.max(...topThreeProducts.value.map(p => p.count), 1)
 })
 
 const getWidth = (count) => {
@@ -14,10 +19,10 @@ const getWidth = (count) => {
 
 <template>
   <div class="top-container">
-    <h3>Топ {{ store.topProducts.length }} товарів за Сьогодні</h3>
+    <h3>Top 3 Products Today</h3> 
     
     <div class="products-grid">
-      <div class="product-card" v-for="(product, index) in store.topProducts" :key="index">
+      <div class="product-card" v-for="(product, index) in topThreeProducts" :key="index">
         <div class="rank" :class="{'top-rank': index < 3}">
             {{ index + 1 }}
         </div>
@@ -25,7 +30,7 @@ const getWidth = (count) => {
         <div class="info">
             <div class="name-row">
                 <span class="name">{{ product.name }}</span>
-                <span class="count">{{ product.count }} шт.</span>
+                <span class="count">{{ product.count }} pcs.</span>
             </div>
             <div class="progress-bg">
                 <div class="progress-fill" :style="{ width: getWidth(product.count) }"></div>
@@ -37,6 +42,7 @@ const getWidth = (count) => {
 </template>
 
 <style scoped>
+
 .top-container {
   background: #fff;
   border: 1px solid #E5E7EB;
@@ -49,12 +55,13 @@ h3 {
   font-size: 18px;
   font-weight: 600;
   margin-bottom: 20px;
+  margin-top: 0;
 }
 
-.products-grid {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
+.products-grid { 
+    display: flex; 
+    flex-direction: column; 
+    gap: 15px; 
 }
 
 .product-card {
@@ -88,17 +95,16 @@ h3 {
     font-size: 14px;
 }
 
-
-.top-rank {
-    background: #DBEAFE;
-    color: #2563EB;
+.top-rank { 
+    background: #DBEAFE; 
+    color: #2563EB; 
 }
 
-.info {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
+.info { 
+    flex: 1; 
+    display: flex; 
+    flex-direction: column; 
+    gap: 6px; 
 }
 
 .name-row {
@@ -110,8 +116,8 @@ h3 {
     color: #1F2937;
 }
 
-.count {
-    color: #3B82F6;
+.count { 
+    color: #3B82F6; 
 }
 
 .progress-bg {
