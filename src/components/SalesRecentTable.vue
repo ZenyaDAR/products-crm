@@ -2,11 +2,13 @@
 import { useSalesStore } from '@/stores/sales'
 const store = useSalesStore()
 
+defineEmits(['open-all'])
+
 const formatDate = (dateInput) => {
   if (!dateInput) return ''
   const date = new Date(dateInput)
   if (isNaN(date)) return dateInput
-  return date.toLocaleDateString('uk-UA', {
+  return date.toLocaleDateString('en-GB', {
     day: '2-digit',
     month: '2-digit',
     year: 'numeric'
@@ -22,38 +24,44 @@ const formatPrice = (value) => {
 
 <template>
   <div class="orders-container">
-    <div class="header-title">
-      <h3>Останні замовлення</h3>
+    <div class="header-row">
+      <h3>Recent Sales</h3>
+      <button class="view-all-btn" @click="$emit('open-all')">
+        All Sales &rarr;
+      </button>
     </div>
     
-    <div class="table-scroll">
-      <div class="table-content">
+    <div class="table-content">
         <div class="row head">
-          <div>№</div>
-          <div>Дата</div>
-          <div class="head-client">Клієнт</div>
-          <div>К-сть</div>
-          <div>Сума</div>
-          <div>Статус</div>
+            <div>№</div>
+            <div>Date</div>
+            <div class="align-left">Customer</div>
+            <div>Qty</div>
+            <div>Amount</div>
+            <div>Status</div>
         </div>
 
-        <div v-if="store.recentOrders.length === 0" class="no-data">
-          Замовлень поки немає
-        </div>
-
-        <div class="row" v-for="order in store.recentOrders" :key="order.id">
-          <div class="id-col">#{{ order.id }}</div>
-          <div>{{ formatDate(order.date) }}</div>
-          <div class="client-col">{{ order.client || 'Невідомий' }}</div>
-          <div>{{ order.quantity || 0 }}</div>
-          <div>{{ formatPrice(order.sum) }}₴</div>
-          <div>
-            <div :class="['status', `status-${order.status ? order.status.toLowerCase() : 'completed'}`]">
-              {{ order.status || 'Completed' }}
+        <div class="rows-scroll">
+            <div v-if="store.recentOrders.length === 0" class="no-data">
+                No sales yet
             </div>
-          </div>
+
+            <div class="row" v-for="order in store.recentOrders" :key="order.id">
+                <div class="id-col">#{{ order.id }}</div>
+                <div>{{ formatDate(order.date) }}</div>
+                <div class="client-col align-left" :title="order.client">
+                    {{ order.client || 'Unknown' }}
+                </div>
+                <div>{{ order.quantity || 0 }}</div>
+                <div>{{ formatPrice(order.sum) }}₴</div>
+                
+                <div class="status-col">
+                    <div :class="['status', `status-${order.status ? order.status.toLowerCase() : 'completed'}`]">
+                    {{ order.status || 'Completed' }}
+                    </div>
+                </div>
+            </div>
         </div>
-      </div>
     </div>
   </div>
 </template>
@@ -63,102 +71,161 @@ const formatPrice = (value) => {
   background: #fff;
   border: 1px solid #E5E7EB;
   border-radius: 5px;
-  padding: 15px;
+  width: 100%; 
+  height: 100%;
   display: flex;
   flex-direction: column;
-  gap: 15px;
-  width: 100%; 
+  padding: 15px 0 0 0; 
   overflow: hidden; 
+}
+
+.header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 20px 15px 20px;
 }
 
 h3 {
     font-family: Montserrat;
     font-size: 18px;
     font-weight: 600;
-    margin-bottom: 5px;
-    padding-left: 10px;
+    margin: 0;
 }
 
-.table-scroll {
-  overflow-x: auto;
-  width: 100%;
-  padding-bottom: 5px;
+.view-all-btn {
+    background: transparent;
+    border: none;
+    color: #3B82F6;
+    font-family: Montserrat;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.view-all-btn:hover {
+    color: #1D4ED8;
+    text-decoration: underline;
 }
 
 .table-content {
-  min-width: 700px; 
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 0 15px 15px 15px;
+    overflow: hidden; 
 }
 
 .row {
   display: grid;
-  grid-template-columns: 40px 100px 1fr 80px 120px 140px; 
+  grid-template-columns: 35px minmax(0, 1fr) minmax(0, 2fr) minmax(0, 0.6fr) minmax(0, 1fr) 100px;
   align-items: center;
   text-align: center;
   font-family: Montserrat;
   font-size: 15px;
-  font-weight: 500;
+  font-weight: 400;
   color: #000;
-  padding: 0 10px;
+  padding: 0 5px;
+  gap: 2px;      
+}
+
+.row > div {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0; 
 }
 
 .head {
-  font-weight: 600;
-  color: #6B7280;
-  font-size: 14px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid transparent;
+  padding-left: 15px;
+  padding-right: 15px;
 }
 
-.head-client {
-    text-align: left;
-    padding-left: 120px; 
+.head > div {
+  font-weight: 600 !important;
+  color: #6B7280;
+  font-size: 13px;
+}
+
+.rows-scroll {
+    overflow-y: auto;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 5px;
+    scrollbar-width: none; 
+}
+.rows-scroll::-webkit-scrollbar { 
+  display: none; 
 }
 
 .row:not(.head) {
-  padding: 20px 10px;
-  border: 1px solid #E5E7EB;
+  padding: 15px 5px;
+  border: 3px solid transparent; 
+  outline: 1px solid #e5e7eb;
   border-radius: 10px;
   box-shadow: 0 2px 16px 3px rgba(0, 0, 0, 0.06);
   background: #fff;
   transition: transform 0.2s;
+  cursor: pointer;
 }
 
 .row:not(.head):hover {
     transform: translateY(-2px);
+    outline-color: #3B82F6;
 }
 
-.id-col { text-align: left; font-weight: 600; padding-left: 10px; }
+.align-left { 
+  text-align: left; 
+}
 
-.client-col {
-    text-align: left;
-    padding-left: 80px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+.id-col { 
+  font-weight: 400; 
+  text-align: left; 
+  padding-left: 5px; 
+}
+
+.client-col { 
+  font-weight: 400; 
+}
+
+.status-col { 
+  display: flex; 
+  justify-content: center; 
 }
 
 .status {
   font-family: Montserrat;
   font-weight: 600;
-  font-size: 13px;
-  padding: 6px 0;
+  font-size: 11px;
+  padding: 5px 0;
   border-radius: 6px;
-  width: 100px;
-  margin: 0 auto;
+  width: 100%;
   text-transform: capitalize;
   text-align: center;
-  display: flex;
-  justify-content: center;
+  white-space: nowrap;
 }
 
-.status-completed { background: #06D6A0; color: #FFFFFF; border: 1px solid #10B981; }
-.status-draft { background: #F59E0B; color: #FFFFFF; border: 1px solid #F59E0B; }
+.status-completed { 
+  background: #06D6A0; 
+  color: #FFFFFF; 
+  border: 1px solid #10B981; 
+}
 
-.no-data {
-  text-align: center;
-  padding: 20px;
-  color: #9CA3AF;
-  font-family: Montserrat;
+.status-draft { 
+  background: #F59E0B; 
+  color: #FFFFFF; 
+  border: 1px solid #F59E0B; 
+}
+
+.no-data { 
+  text-align: center; 
+  padding: 20px; 
+  color: #9CA3AF; 
+  font-family: Montserrat; 
 }
 </style>
