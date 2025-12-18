@@ -1,4 +1,3 @@
-
 <script setup>
 import { computed } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
@@ -12,16 +11,19 @@ import { useAuthStore } from '@/stores/auth'
 const authStore = useAuthStore()
 const router = useRouter()
 const user = authStore.user
+
 const logout = () => {
     authStore.logout()
     router.push('/auth')
 }
+
 const dayPart = computed(() => {
     const hour = new Date().getHours()
-    if (hour < 12) return 'Доброго ранку'
-    if (hour < 18) return 'Добрий день'
-    return 'Добрий вечір'
+    if (hour < 12) return 'Good Morning'
+    if (hour < 18) return 'Good Afternoon'
+    return 'Good Evening'
 })
+
 const adminName = computed(() => {
    if (user.fullName.split(' ').length > 1) {
     return user.fullName.split(' ')[1]
@@ -37,28 +39,24 @@ const adminName = computed(() => {
        </div>
        <div class="aside-bar__menu">
          <RouterLink to="/" :class="{ 'active': $route.name === 'deliveries' || $route.name === 'delivery' }">
-            <IconOrders /> Замовлення
+            <IconOrders /> Orders
          </RouterLink>
          <RouterLink to="/warehouse" :class="{ 'active': $route.name === 'warehouse' }">
-            <IconWarehouse />
-            Склад
+            <IconWarehouse /> Warehouse
          </RouterLink>
          <RouterLink to="/suppliers" :class="{ 'active': $route.name === 'suppliers' }">
-            <IconSuppliers />
-            Постачальники
+            <IconSuppliers /> Suppliers
          </RouterLink>
          <RouterLink to="/sales" :class="{ 'active': $route.name === 'sales' }">
-            <IconSales />
-            Продажі
+            <IconSales /> Sales
          </RouterLink>
          <RouterLink to="/statistics" :class="{ 'active': $route.name === 'statistics' }">
-            <IconStatistics />
-            Статистика
+            <IconStatistics /> Statistics
          </RouterLink>
        </div>
        <div class="aside-bar__logout">
         <button class="aside-bar__logout-button" @click="logout">
-            Вийти
+            Log Out
         </button>
        </div>
     </aside>
@@ -93,13 +91,11 @@ const adminName = computed(() => {
     flex-direction: column;
     gap: 20px;
     padding: 20px;
-
 }
 .aside-bar__menu a {
     display: flex;
     align-items: center;
     gap: 10px;
-
     font-family: Montserrat;
     font-size: 15px;
     font-weight: 600;
