@@ -10,13 +10,13 @@ const props = defineProps({
 <template>
   <div class="deliveries-products">
     <div class="row head">
-      <div>Продукт</div>
+      <div>Product</div>
       <div>SKU</div>
-      <div>Ціна закупу</div>
-      <div>Ціна продажу</div>
-      <div>Кількість</div>
-      <div>Сума закупу</div>
-      <div>Сума продажу</div>
+      <div>Purchase Price</div>
+      <div>Sale Price</div>
+      <div>Quantity</div>
+      <div>Total Purchase</div>
+      <div>Total Sale</div>
     </div>
     <div class="rows">
       <div class="row" v-for="product in props.items" :key="product.SKU">
@@ -25,8 +25,8 @@ const props = defineProps({
         <div>{{ product.PurchasePrice }}₴</div>
         <div>{{ product.RetailPrice }}₴</div>
         <div>{{ Number(product.Quantity).toFixed(2) }} {{ product.Unit }}</div>
-        <div>{{ product.PurchasePrice * product.Quantity }}₴</div>
-        <div>{{ product.RetailPrice * product.Quantity }}₴</div>
+        <div>{{ (product.PurchasePrice * product.Quantity).toFixed(2) }}₴</div>
+        <div>{{ (product.RetailPrice * product.Quantity).toFixed(2) }}₴</div>
       </div>
     </div>
   </div>

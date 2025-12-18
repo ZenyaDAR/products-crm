@@ -143,7 +143,7 @@ h1 {
 }
 
 .add-btn {
-    background: #3B82F6;
+    background: #2563eb;
     color: white;
     border: none;
     padding: 10px 20px;
@@ -154,7 +154,7 @@ h1 {
     transition: background 0.2s;
     white-space: nowrap;
 }
-.add-btn:hover { background: #2563EB; }
+.add-btn:hover { background: #1d4ed8; }
 
 .suppliers-grid {
     display: grid;

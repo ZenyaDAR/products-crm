@@ -19,7 +19,7 @@ const { delivery, formatDate, formatTime } = defineProps({
   <div v-if="delivery" class="deliveries-activity">
     <div class="head-info">
       <div>
-        <h1>Поставка #{{ delivery.DeliveryID }}</h1>
+        <h1>Order #{{ delivery.DeliveryID }}</h1>
         <span>{{ delivery.SupplierName }}</span>
       </div>
       <span class="status" :class="'status-' + delivery.Status">
@@ -28,8 +28,7 @@ const { delivery, formatDate, formatTime } = defineProps({
     </div>
 
     <div class="activity-timeline">
-      <h2>Стрічка активності</h2>
-     
+      <h2>Activity Timeline</h2>
       <div class="activity-timeline-item completed" v-for="status in delivery?.history">
         <span class="activity-timeline-item-status">{{  status.Status }}</span>
         <div>

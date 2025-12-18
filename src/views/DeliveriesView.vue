@@ -114,7 +114,7 @@ const formatDate = (v) => {
 const formatTime = (v) => {
   if (!v) return ''
   const d = new Date(v)
-  return d.toLocaleTimeString('uk-UA', {
+  return d.toLocaleTimeString('en-GB', {
     hour: '2-digit',
     minute: '2-digit',
   })
@@ -190,7 +190,7 @@ const editDelivery = async (delivery) => {
     availableProducts.value = await deliveriesStore.getAvailableProducts(delivery.DeliveryID)
   } catch (e) {
     availableProducts.value = []
-    editError.value = 'Не вдалося отримати список товарів постачальника'
+    editError.value = 'Failed to load supplier products'
   }
   isEditModalOpen.value = true
 }
@@ -243,7 +243,7 @@ const submitEdit = async () => {
       resetEditForm()
     }
   } catch (e) {
-    editError.value = e?.response?.data?.error || 'Не вдалося оновити поставку'
+    editError.value = e?.response?.data?.error || 'Failed to update order'
   } finally {
     isSavingEdit.value = false
   }
@@ -261,11 +261,11 @@ const onSupplierChange = async () => {
 
 const submitCreate = async () => {
   if (!createForm.value.supplierId) {
-    createError.value = 'Оберіть постачальника'
+    createError.value = 'Select a supplier'
     return
   }
   if (!createForm.value.items.length) {
-    createError.value = 'Додайте хоча б один товар'
+    createError.value = 'Add at least one product'
     return
   }
 
@@ -293,7 +293,7 @@ const submitCreate = async () => {
       closeCreateModal()
     }
   } catch (e) {
-    createError.value = e?.response?.data?.error || 'Не вдалося створити поставку'
+    createError.value = e?.response?.data?.error || 'Failed to create order'
   } finally {
     isSavingCreate.value = false
   }
@@ -304,9 +304,13 @@ const submitCreate = async () => {
   <main>
     <PageToolbar>
       <template #left>
-        <button class="primary-btn" @click="openCreateModal">+ Додати нову поставку</button>
+        <h1 class="page-title">Orders</h1>
+      </template>
+      <template #right>
+        <button class="primary-btn" @click="openCreateModal">+ Create Order</button>
       </template>
     </PageToolbar>
+
     <DeliveriesTable
       :deliveries="deliveries"
       :formatDate="formatDate"
@@ -328,9 +332,9 @@ const submitCreate = async () => {
         <header class="modal-header">
           <div>
             <p class="modal-subtitle">
-              Поставка #{{ fullDelivery?.DeliveryID || editingDeliveryId }}
+              Order #{{ fullDelivery?.DeliveryID || editingDeliveryId }}
             </p>
-            <h2>Редагування поставки</h2>
+            <h2>Edit Order</h2>
           </div>
           <button type="button" class="ghost-btn" @click="closeEditModal">✕</button>
         </header>
@@ -338,7 +342,7 @@ const submitCreate = async () => {
         <div class="modal-body">
           <div class="form-grid">
             <label class="field">
-              <span>Статус</span>
+              <span>Status</span>
               <select v-model="editForm.status" :disabled="isCompleted">
                 <option v-for="option in statusOptions" :key="option" :value="option">
                   {{ option }}
@@ -346,7 +350,7 @@ const submitCreate = async () => {
               </select>
             </label>
             <label class="field">
-              <span>Постачальник</span>
+              <span>Supplier</span>
               <input
                 type="text"
                 :value="fullDelivery?.SupplierName || fullDelivery?.SupplierID || ''"
@@ -358,8 +362,8 @@ const submitCreate = async () => {
           <section class="items-section">
             <div class="section-head">
               <div class="section-title">
-                <h3>Товари в поставці</h3>
-                <p class="muted">Редагуйте кількість або видаляйте позиції</p>
+                <h3>Products</h3>
+                <p class="muted">Edit quantity or remove items</p>
               </div>
               <button
                 v-if="editable && availableProducts.length"
@@ -367,12 +371,12 @@ const submitCreate = async () => {
                 class="secondary-btn"
                 @click="addItemRow"
               >
-                + Додати товар
+                + Add Product
               </button>
             </div>
 
             <p v-if="isCompleted" class="info-banner">
-              Поставка завершена — редагування недоступне.
+              Order is completed. Editing is disabled.
             </p>
 
             <div v-if="editForm.items.length" class="items-rows">
@@ -387,13 +391,13 @@ const submitCreate = async () => {
                     <div class="item-sub">{{ item.PurchasePrice }}₴ / {{ item.Unit }}</div>
                   </div>
                   <label class="field compact">
-                    <span>Кількість</span>
+                    <span>Qty</span>
                     <input
                       v-model.number="item.Quantity"
                       type="number"
                       min="0"
                       step="1"
-                      placeholder="Кількість"
+                      placeholder="Qty"
                       required
                       :disabled="isCompleted"
                     />
@@ -404,20 +408,20 @@ const submitCreate = async () => {
                     @click="removeItemRow(idx)"
                     :disabled="isCompleted"
                   >
-                    Видалити
+                    Remove
                   </button>
                 </template>
 
                 <template v-else>
                   <label class="field compact">
-                    <span>Продукт</span>
+                    <span>Product</span>
                     <select
                       v-model="item.SKU"
                       required
                       @change="onProductSelect(item)"
                       :disabled="isCompleted"
                     >
-                      <option value="" disabled>Оберіть продукт</option>
+                      <option value="" disabled>Select product</option>
                       <option
                         v-for="product in availableProducts"
                         :key="product.SKU"
@@ -430,22 +434,22 @@ const submitCreate = async () => {
                   <div class="item-static">
                     <div class="item-title">
                       {{
-                        item.ProductName ? `${item.ProductName} (${item.SKU})` : 'Оберіть продукт'
+                        item.ProductName ? `${item.ProductName} (${item.SKU})` : 'Select product'
                       }}
                     </div>
                     <div class="item-sub" v-if="item.PurchasePrice">
-                      Ціна закупу: {{ item.PurchasePrice }}₴
+                      Price: {{ item.PurchasePrice }}₴
                       <span v-if="item.Unit"> / {{ item.Unit }}</span>
                     </div>
                   </div>
                   <label class="field compact">
-                    <span>Кількість</span>
+                    <span>Qty</span>
                     <input
                       v-model.number="item.Quantity"
                       type="number"
                       min="0"
                       step="1"
-                      placeholder="Кількість"
+                      placeholder="Qty"
                       required
                       :disabled="isCompleted"
                     />
@@ -456,14 +460,14 @@ const submitCreate = async () => {
                     @click="removeItemRow(idx)"
                     :disabled="isCompleted"
                   >
-                    Видалити
+                    Remove
                   </button>
                 </template>
               </div>
             </div>
-            <p v-else class="muted">Додайте товари з цього постачальника.</p>
+            <p v-else class="muted">Add products from this supplier.</p>
             <p v-if="!availableProducts.length" class="muted">
-              Немає доступних активних товарів від цього постачальника.
+              No active products available from this supplier.
             </p>
           </section>
         </div>
@@ -471,9 +475,9 @@ const submitCreate = async () => {
         <p v-if="editError" class="error-text">{{ editError }}</p>
 
         <footer class="modal-footer">
-          <button type="button" class="secondary-btn" @click="closeEditModal">Скасувати</button>
+          <button type="button" class="secondary-btn" @click="closeEditModal">Cancel</button>
           <button type="submit" class="primary-btn" :disabled="isSavingEdit">
-            {{ isSavingEdit ? 'Збереження...' : 'Зберегти зміни' }}
+            {{ isSavingEdit ? 'Saving...' : 'Save Changes' }}
           </button>
         </footer>
       </form>
@@ -485,8 +489,8 @@ const submitCreate = async () => {
       <form class="modal-card" @submit.prevent="submitCreate">
         <header class="modal-header">
           <div>
-            <p class="modal-subtitle">Нова поставка</p>
-            <h2>Створення поставки</h2>
+            <p class="modal-subtitle">New Order</p>
+            <h2>Create Order</h2>
           </div>
           <button type="button" class="ghost-btn" @click="closeCreateModal">✕</button>
         </header>
@@ -494,16 +498,16 @@ const submitCreate = async () => {
         <div class="modal-body">
           <div class="form-grid">
             <label class="field">
-              <span>Постачальник</span>
+              <span>Supplier</span>
               <select v-model="createForm.supplierId" @change="onSupplierChange">
-                <option value="" disabled>Оберіть постачальника</option>
+                <option value="" disabled>Select supplier</option>
                 <option v-for="s in suppliers" :key="s.SupplierID" :value="s.SupplierID">
                   {{ s.Name }}
                 </option>
               </select>
             </label>
             <label class="field">
-              <span>Дата</span>
+              <span>Date</span>
               <input type="date" v-model="createForm.date" disabled />
             </label>
           </div>
@@ -511,8 +515,8 @@ const submitCreate = async () => {
           <section class="items-section">
             <div class="section-head">
               <div class="section-title">
-                <h3>Товари</h3>
-                <p class="muted">Додайте товари постачальника</p>
+                <h3>Products</h3>
+                <p class="muted">Add products from supplier</p>
               </div>
               <button
                 v-if="supplierProducts.length"
@@ -520,15 +524,15 @@ const submitCreate = async () => {
                 class="secondary-btn"
                 @click="addCreateItemRow"
               >
-                + Додати товар
+                + Add Product
               </button>
             </div>
             <div v-if="createForm.items.length" class="items-rows">
               <div v-for="(item, idx) in createForm.items" :key="idx" class="item-row">
                 <label class="field compact">
-                  <span>Продукт</span>
+                  <span>Product</span>
                   <select v-model="item.SKU" required @change="onCreateProductSelect(item)">
-                    <option value="" disabled>Оберіть продукт</option>
+                    <option value="" disabled>Select product</option>
                     <option
                       v-for="product in supplierProducts"
                       :key="product.SKU"
@@ -540,32 +544,32 @@ const submitCreate = async () => {
                 </label>
                 <div class="item-static">
                   <div class="item-title">
-                    {{ item.ProductName ? `${item.ProductName} (${item.SKU})` : 'Оберіть продукт' }}
+                    {{ item.ProductName ? `${item.ProductName} (${item.SKU})` : 'Select product' }}
                   </div>
                   <div class="item-sub" v-if="item.PurchasePrice">
-                    Ціна закупу: {{ item.PurchasePrice }}₴
+                    Price: {{ item.PurchasePrice }}₴
                     <span v-if="item.Unit">/ {{ item.Unit }}</span>
                   </div>
                 </div>
                 <label class="field compact">
-                  <span>Кількість</span>
+                  <span>Qty</span>
                   <input
                     v-model.number="item.Quantity"
                     type="number"
                     min="0"
                     step="1"
-                    placeholder="Кількість"
+                    placeholder="Qty"
                     required
                   />
                 </label>
                 <button type="button" class="ghost-btn" @click="removeCreateItemRow(idx)">
-                  Видалити
+                  Remove
                 </button>
               </div>
             </div>
-            <p v-else class="muted">Оберіть постачальника, щоб додати товари.</p>
+            <p v-else class="muted">Select a supplier to add items.</p>
             <p v-if="!supplierProducts.length && createForm.supplierId" class="muted">
-              Немає активних товарів для цього постачальника.
+              No active products available for this supplier.
             </p>
           </section>
         </div>
@@ -573,9 +577,9 @@ const submitCreate = async () => {
         <p v-if="createError" class="error-text">{{ createError }}</p>
 
         <footer class="modal-footer">
-          <button type="button" class="secondary-btn" @click="closeCreateModal">Скасувати</button>
+          <button type="button" class="secondary-btn" @click="closeCreateModal">Cancel</button>
           <button type="submit" class="primary-btn" :disabled="isSavingCreate">
-            {{ isSavingCreate ? 'Створення...' : 'Створити поставку' }}
+            {{ isSavingCreate ? 'Creating...' : 'Create Order' }}
           </button>
         </footer>
       </form>
@@ -584,6 +588,14 @@ const submitCreate = async () => {
 </template>
 
 <style scoped>
+.page-title {
+    margin: 0;
+    font-family: Montserrat;
+    font-size: 24px;
+    font-weight: 700;
+    color: #111827;
+}
+
 main {
   display: grid;
   grid-template-columns: 2.17fr 1fr;
@@ -781,6 +793,7 @@ main {
   background: #2563eb;
   color: #ffffff;
   padding: 10px 16px;
+  min-width: 180px;
 }
 .primary-btn:hover {
   background: #1d4ed8;

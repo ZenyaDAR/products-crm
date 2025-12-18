@@ -32,11 +32,11 @@ function changeActiveDelivery(delivery) {
 <template>
   <div class="order-card">
     <div class="row head">
-      <div>Номер</div>
-      <div>Постачальник</div>
-      <div>Дата</div>
-      <div>Сума</div>
-      <div>Статус</div>
+      <div>№</div>
+      <div>Supplier</div>
+      <div>Date</div>
+      <div>Amount</div>
+      <div>Status</div>
     </div>
     <div class="rows">
       <div

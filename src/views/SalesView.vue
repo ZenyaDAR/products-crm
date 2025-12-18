@@ -6,7 +6,6 @@ import SalesStats from '@/components/SalesStats.vue'
 import SalesRecentTable from '@/components/SalesRecentTable.vue'
 import SalesChart from '@/components/SalesChart.vue'
 import SalesTopProducts from '@/components/SalesTopProducts.vue'
-
 import SalesAllOrdersModal from '@/components/SalesAllOrders.vue' 
 
 const store = useSalesStore()
@@ -19,7 +18,11 @@ onMounted(() => {
 
 <template>
   <main class="sales-page">
-    
+
+    <div class="page-header">
+        <h1>Sales</h1>
+    </div>
+
     <div class="top-section">
        <SalesStats />
     </div>
@@ -36,6 +39,7 @@ onMounted(() => {
     <div class="bottom-section">
       <SalesTopProducts />
     </div>
+    
     <SalesAllOrdersModal 
         :isOpen="isAllOrdersOpen" 
         :orders="store.recentOrders"
@@ -56,6 +60,18 @@ onMounted(() => {
   box-sizing: border-box; 
   overflow: hidden; 
   background: #f9fafb;
+}
+
+.page-header {
+    flex-shrink: 0;
+}
+
+.page-header h1 {
+    margin: 0;
+    font-family: Montserrat;
+    font-size: 24px;
+    font-weight: 700;
+    color: #111827;
 }
 
 .top-section { flex-shrink: 0; }
