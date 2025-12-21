@@ -779,48 +779,6 @@ main {
   border-color: #2563eb;
   box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.12);
 }
-.primary-btn,
-.secondary-btn,
-.ghost-btn {
-  font-family: Montserrat;
-  border: 1px solid transparent;
-  border-radius: 8px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-.primary-btn {
-  background: #2563eb;
-  color: #ffffff;
-  padding: 10px 16px;
-  min-width: 180px;
-}
-.primary-btn:hover {
-  background: #1d4ed8;
-}
-.primary-btn:disabled {
-  opacity: 0.7;
-  cursor: not-allowed;
-}
-.secondary-btn {
-  background: #ffffff;
-  color: #111827;
-  border-color: #e5e7eb;
-  padding: 9px 14px;
-}
-.secondary-btn:hover {
-  border-color: #2563eb;
-  color: #2563eb;
-}
-.ghost-btn {
-  background: transparent;
-  color: #6b7280;
-  padding: 6px 8px;
-  border-color: transparent;
-}
-.ghost-btn:hover {
-  color: #ef4444;
-}
 .muted {
   font-size: 13px;
   color: #6b7280;

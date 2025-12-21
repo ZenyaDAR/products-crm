@@ -66,8 +66,6 @@ const handleSubmit = async () => {
           <button type="submit" class="submit-button" :disabled="loading">
             {{ loading ? 'Вхід...' : 'Вхід' }}
           </button>
-          kateryna.i <br>
-          admin
         </div>
 
         

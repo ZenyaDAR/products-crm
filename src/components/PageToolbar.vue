@@ -14,6 +14,7 @@ const props = defineProps({
     </div>
     <div class="center">
       <h1 v-if="props.title">{{ props.title }}</h1>
+      <slot name="center" />
       <slot />
     </div>
     <div class="right">
@@ -35,6 +36,12 @@ const props = defineProps({
 .right {
   display: flex;
   align-items: center;
+  gap: 10px;
+}
+.center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   gap: 10px;
 }
 .center h1 {

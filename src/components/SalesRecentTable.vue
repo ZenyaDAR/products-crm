@@ -36,7 +36,6 @@ const formatPrice = (value) => {
             <div>№</div>
             <div>Date</div>
             <div class="align-left">Customer</div>
-            <div>Qty</div>
             <div>Amount</div>
             <div>Status</div>
         </div>
@@ -52,7 +51,6 @@ const formatPrice = (value) => {
                 <div class="client-col align-left" :title="order.client">
                     {{ order.client || 'Unknown' }}
                 </div>
-                <div>{{ order.quantity || 0 }}</div>
                 <div>{{ formatPrice(order.sum) }}₴</div>
                 
                 <div class="status-col">
@@ -119,7 +117,7 @@ h3 {
 
 .row {
   display: grid;
-  grid-template-columns: 35px minmax(0, 1fr) minmax(0, 2fr) minmax(0, 0.6fr) minmax(0, 1fr) 100px;
+  grid-template-columns: 35px minmax(0, 1fr) minmax(0, 2fr) minmax(0, 1fr) 100px;
   align-items: center;
   text-align: center;
   font-family: Montserrat;
@@ -200,14 +198,14 @@ h3 {
 
 .status {
   font-family: Montserrat;
-  font-weight: 600;
-  font-size: 11px;
-  padding: 5px 0;
-  border-radius: 6px;
-  width: 100%;
+  font-weight: 500;
+  font-size: 15px;
+  line-height: 1;
+  padding: 4px 5px;
+  border-radius: 4px;
+  width: fit-content;
+  margin: 0 auto;
   text-transform: capitalize;
-  text-align: center;
-  white-space: nowrap;
 }
 
 .status-completed { 

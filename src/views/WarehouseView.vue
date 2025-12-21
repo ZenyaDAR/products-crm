@@ -9,10 +9,10 @@ const deliveriesStore = useDeliveriesStore()
 
 const selectedCategory = ref('all')
 const selectedStatus = ref('all')
+const searchQuery = ref('')
 
 const isCreateModalOpen = ref(false)
 const isEditModalOpen = ref(false)
-const isInventoryModalOpen = ref(false)
 
 const editingProduct = ref(null)
 const isSaving = ref(false)
@@ -25,9 +25,11 @@ const createForm = ref({
   sku: '',
   category: '',
   unit: 'kg',
-  purchasePrice: '',
-  retailPrice: '',
-  supplier: '',
+  purchasePrice: 0,
+  retailPrice: 0,
+  supplier: null,
+  brand: '',
+  minStock: 0,
 })
 
 const editForm = ref({
@@ -77,6 +79,34 @@ const categoryOptions = computed(() => {
   ]
 })
 
+const filteredProducts = computed(() => {
+  let result = [...warehouseStore.products]
+
+  // Apply category filter
+  if (selectedCategory.value !== 'all') {
+    result = result.filter((product) => product.Category === selectedCategory.value)
+  }
+
+  // Apply status filter
+  if (selectedStatus.value !== 'all') {
+    result = result.filter((product) => product.StockStatus === selectedStatus.value)
+  }
+
+  // Apply search filter
+  if (searchQuery.value) {
+    const query = searchQuery.value.toLowerCase()
+    result = result.filter((product) => {
+      const nameMatch = product.ProductName.toLowerCase().includes(query)
+      const skuMatch = product.SKU.toLowerCase().includes(query)
+      const categoryMatch = product.Category.toLowerCase().includes(query)
+      const supplierMatch = product.Supplier.toLowerCase().includes(query)
+      return nameMatch || skuMatch || categoryMatch || supplierMatch
+    })
+  }
+
+  return result
+})
+
 const loadData = async () => {
   await Promise.all([
     warehouseStore.fetchStats(),
@@ -88,12 +118,8 @@ const loadData = async () => {
   ])
 }
 
-const onFilterChange = async () => {
-  await warehouseStore.fetchInventory({
-    category: selectedCategory.value,
-    status: selectedStatus.value,
-  })
-}
+// Note: Filtering is now handled by computed property filteredProducts
+// No need to fetch data on filter change
 
 const openCreateModal = async () => {
   resetCreateForm()
@@ -108,25 +134,28 @@ const closeCreateModal = () => {
 
 const resetCreateForm = () => {
   createForm.value = {
-    name: '', 
-    sku: '', 
-    category: '', 
-    unit: 'kg', 
-    purchasePrice: '', 
-    retailPrice: '', 
-    supplier: '',
+    name: '',
+    sku: '',
+    category: '',
+    unit: 'kg',
+    purchasePrice: 0,
+    retailPrice: 0,
+    supplier: null,
+    brand: '',
+    minStock: 0,
   }
   errorMessage.value = ''
 }
 
 const submitCreate = async () => {
   if (
-    !createForm.value.name || 
-    !createForm.value.sku || 
-    !createForm.value.category || 
-    !createForm.value.supplier
+    !createForm.value.name ||
+    !createForm.value.sku ||
+    !createForm.value.category ||
+    createForm.value.supplier === null ||
+    createForm.value.supplier === ''
   ) {
-    errorMessage.value = "Please fill in all required fields"
+    errorMessage.value = 'Please fill in all required fields'
     return
   }
 
@@ -161,9 +190,9 @@ const closeEditModal = () => {
 }
 
 const resetEditForm = () => {
-  editForm.value = { 
-    purchasePrice: '', 
-    retailPrice: '', 
+  editForm.value = {
+    purchasePrice: '',
+    retailPrice: '',
   }
   errorMessage.value = ''
 }
@@ -173,7 +202,7 @@ const submitEdit = async () => {
 
   isSaving.value = true
   errorMessage.value = ''
-  
+
   try {
     await warehouseStore.updateProduct(editingProduct.value.SKU, editForm.value)
     await loadData()
@@ -197,14 +226,6 @@ const deleteProduct = async (product) => {
   }
 }
 
-const openInventoryModal = () => { 
-  isInventoryModalOpen.value = true 
-}
-
-const closeInventoryModal = () => { 
-  isInventoryModalOpen.value = false 
-}
-
 onMounted(async () => {
   await loadData()
 })
@@ -216,10 +237,19 @@ onMounted(async () => {
       <template #left>
         <h1 class="page-title">Warehouse</h1>
       </template>
+      <template #center>
+        <div class="search-container">
+          <input
+            v-model="searchQuery"
+            type="text"
+            placeholder="Search by name, SKU, category or supplier..."
+            class="search-input"
+          />
+        </div>
+      </template>
       <template #right>
         <div class="toolbar-actions">
           <button class="primary-btn" @click="openCreateModal">+ Add Product</button>
-          <button class="primary-btn" @click="openInventoryModal">+ Inventory</button>
         </div>
       </template>
     </PageToolbar>
@@ -250,12 +280,12 @@ onMounted(async () => {
 
     <!-- Filters -->
     <div class="filters">
-      <select v-model="selectedCategory" @change="onFilterChange" class="filter-select">
+      <select v-model="selectedCategory" class="filter-select">
         <option v-for="option in categoryOptions" :key="option.value" :value="option.value">
           {{ option.label }}
         </option>
       </select>
-      <select v-model="selectedStatus" @change="onFilterChange" class="filter-select">
+      <select v-model="selectedStatus" class="filter-select">
         <option v-for="option in statusOptions" :key="option.value" :value="option.value">
           {{ option.label }}
         </option>
@@ -271,6 +301,7 @@ onMounted(async () => {
               <th>Product Name</th>
               <th>SKU</th>
               <th>Category</th>
+              <th>Supplier</th>
               <th>Stock</th>
               <th>Status</th>
               <th>Purchase Price</th>
@@ -282,13 +313,17 @@ onMounted(async () => {
             <tr v-if="warehouseStore.loading">
               <td colspan="8" class="text-center">Loading...</td>
             </tr>
-            <tr v-else-if="warehouseStore.products.length === 0">
-              <td colspan="8" class="text-center">No products found</td>
+            <tr v-else-if="filteredProducts.length === 0">
+              <td colspan="9" class="text-center">
+                <span v-if="searchQuery">No products match your search.</span>
+                <span v-else>No products found</span>
+              </td>
             </tr>
-            <tr v-else v-for="product in warehouseStore.products" :key="product.SKU">
+            <tr v-else v-for="product in filteredProducts" :key="product.SKU">
               <td class="product-name">{{ product.ProductName }}</td>
               <td>{{ product.SKU }}</td>
               <td>{{ product.Category }}</td>
+              <td>{{ product.Supplier }}</td>
               <td>{{ Number(product.StockQuantity).toFixed(2) }} {{ product.Unit }}</td>
               <td>
                 <span :class="['badge', getStatusBadge(product.StockStatus).class]">
@@ -297,40 +332,42 @@ onMounted(async () => {
               </td>
               <td>{{ formatCurrency(product.PurchasePrice) }}</td>
               <td>{{ formatCurrency(product.RetailPrice) }}</td>
-              <td class="actions">
-                <button class="icon-btn" @click="openEditModal(product)" title="Edit">
-                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                    <path
-                      d="M11.333 2.00004C11.5081 1.82494 11.716 1.68605 11.9447 1.59129C12.1735 1.49653 12.4187 1.44775 12.6663 1.44775C12.914 1.44775 13.1592 1.49653 13.3879 1.59129C13.6167 1.68605 13.8246 1.82494 13.9997 2.00004C14.1748 2.17513 14.3137 2.383 14.4084 2.61178C14.5032 2.84055 14.552 3.08575 14.552 3.33337C14.552 3.58099 14.5032 3.82619 14.4084 4.05497C14.3137 4.28374 14.1748 4.49161 13.9997 4.66671L5.33301 13.3334L1.33301 14.6667L2.66634 10.6667L11.333 2.00004Z"
-                      stroke="currentColor"
-                      stroke-width="1.5"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                    />
-                  </svg>
-                </button>
-                <button
-                  class="icon-btn icon-btn-delete"
-                  @click="deleteProduct(product)"
-                  title="Delete"
-                >
-                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                    <path
-                      d="M2 4H3.33333H14"
-                      stroke="currentColor"
-                      stroke-width="1.5"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                    />
-                    <path
-                      d="M5.33301 4.00004V2.66671C5.33301 2.31309 5.47348 1.97395 5.72353 1.7239C5.97358 1.47385 6.31272 1.33337 6.66634 1.33337H9.33301C9.68663 1.33337 10.0258 1.47385 10.2758 1.7239C10.5259 1.97395 10.6663 2.31309 10.6663 2.66671V4.00004M12.6663 4.00004V13.3334C12.6663 13.687 12.5259 14.0261 12.2758 14.2762C12.0258 14.5262 11.6866 14.6667 11.333 14.6667H4.66634C4.31272 14.6667 3.97358 14.5262 3.72353 14.2762C3.47348 14.0261 3.33301 13.687 3.33301 13.3334V4.00004H12.6663Z"
-                      stroke="currentColor"
-                      stroke-width="1.5"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                    />
-                  </svg>
-                </button>
+              <td class="actions-wrapper">
+                <div class="actions">
+                  <button class="icon-btn" @click="openEditModal(product)" title="Edit">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                      <path
+                        d="M11.333 2.00004C11.5081 1.82494 11.716 1.68605 11.9447 1.59129C12.1735 1.49653 12.4187 1.44775 12.6663 1.44775C12.914 1.44775 13.1592 1.49653 13.3879 1.59129C13.6167 1.68605 13.8246 1.82494 13.9997 2.00004C14.1748 2.17513 14.3137 2.383 14.4084 2.61178C14.5032 2.84055 14.552 3.08575 14.552 3.33337C14.552 3.58099 14.5032 3.82619 14.4084 4.05497C14.3137 4.28374 14.1748 4.49161 13.9997 4.66671L5.33301 13.3334L1.33301 14.6667L2.66634 10.6667L11.333 2.00004Z"
+                        stroke="currentColor"
+                        stroke-width="1.5"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      />
+                    </svg>
+                  </button>
+                  <button
+                    class="icon-btn icon-btn-delete"
+                    @click="deleteProduct(product)"
+                    title="Delete"
+                  >
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                      <path
+                        d="M2 4H3.33333H14"
+                        stroke="currentColor"
+                        stroke-width="1.5"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      />
+                      <path
+                        d="M5.33301 4.00004V2.66671C5.33301 2.31309 5.47348 1.97395 5.72353 1.7239C5.97358 1.47385 6.31272 1.33337 6.66634 1.33337H9.33301C9.68663 1.33337 10.0258 1.47385 10.2758 1.7239C10.5259 1.97395 10.6663 2.31309 10.6663 2.66671V4.00004M12.6663 4.00004V13.3334C12.6663 13.687 12.5259 14.0261 12.2758 14.2762C12.0258 14.5262 11.6866 14.6667 11.333 14.6667H4.66634C4.31272 14.6667 3.97358 14.5262 3.72353 14.2762C3.47348 14.0261 3.33301 13.687 3.33301 13.3334V4.00004H12.6663Z"
+                        stroke="currentColor"
+                        stroke-width="1.5"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      />
+                    </svg>
+                  </button>
+                </div>
               </td>
             </tr>
           </tbody>
@@ -365,12 +402,26 @@ onMounted(async () => {
           <div class="form-grid">
             <label class="field">
               <span>Category <span class="required">*</span></span>
-              <input
-                v-model="createForm.category"
-                type="text"
-                placeholder="Meat, Vegetables, etc."
-                required
-              />
+              <select name="" id="" v-model="createForm.category" required>
+                <option value="" disabled selected>Select category</option>
+                <option
+                  v-for="category in warehouseStore.categories"
+                  :key="category"
+                  :value="category"
+                >
+                  {{ category }}
+                </option>
+              </select>
+            </label>
+            <label class="field">
+              <span>Brand</span>
+              <input v-model="createForm.brand" type="text" placeholder="Enter brand" />
+            </label>
+          </div>
+          <div class="form-grid">
+            <label class="field">
+              <span>Min Stock</span>
+              <input v-model="createForm.minStock" type="number" placeholder="Enter min stock" />
             </label>
             <label class="field">
               <span>Unit <span class="required">*</span></span>
@@ -482,28 +533,6 @@ onMounted(async () => {
       </form>
     </div>
   </transition>
-
-  <!-- Inventory Modal (placeholder) -->
-  <transition name="fade">
-    <div v-if="isInventoryModalOpen" class="modal-overlay" @click.self="closeInventoryModal">
-      <div class="modal-card">
-        <header class="modal-header">
-          <div>
-            <h2>Inventory</h2>
-          </div>
-          <button type="button" class="ghost-btn" @click="closeInventoryModal">✕</button>
-        </header>
-
-        <div class="modal-body">
-          <p class="muted">Inventory feature coming soon.</p>
-        </div>
-
-        <footer class="modal-footer">
-          <button type="button" class="secondary-btn" @click="closeInventoryModal">Close</button>
-        </footer>
-      </div>
-    </div>
-  </transition>
 </template>
 
 <style scoped>
@@ -579,6 +608,35 @@ main {
   gap: 12px;
   align-items: center;
   flex-shrink: 0;
+}
+
+.search-container {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  max-width: 400px;
+}
+
+.search-input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  font-family: Montserrat, sans-serif;
+  font-size: 14px;
+  background: #fff;
+  outline: none;
+  transition: all 0.2s;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.search-input:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+.search-input::placeholder {
+  color: #9ca3af;
 }
 
 .filter-select {
@@ -660,6 +718,7 @@ main {
   color: #111827;
   padding: 14px 16px;
   border-bottom: 1px solid #e5e7eb;
+  min-height: 58px;
 }
 
 .data-table tbody tr:last-child td {
@@ -853,58 +912,6 @@ main {
   color: #9ca3af;
 }
 
-/* Buttons */
-.primary-btn,
-.secondary-btn,
-.ghost-btn {
-  font-family: Montserrat, sans-serif;
-  border: 1px solid transparent;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.primary-btn {
-  background: #2563eb;
-  color: #ffffff;
-  padding: 10px 16px;
-}
-
-.primary-btn:hover {
-  background: #1d4ed8;
-}
-
-.primary-btn:disabled {
-  opacity: 0.7;
-  cursor: not-allowed;
-}
-
-.secondary-btn {
-  background: #ffffff;
-  color: #111827;
-  border-color: #e5e7eb;
-  padding: 9px 14px;
-}
-
-.secondary-btn:hover {
-  border-color: #2563eb;
-  color: #2563eb;
-}
-
-.ghost-btn {
-  background: transparent;
-  color: #6b7280;
-  padding: 6px 8px;
-  border-color: transparent;
-  font-size: 20px;
-}
-
-.ghost-btn:hover {
-  color: #ef4444;
-}
-
 .error-text {
   font-family: Montserrat, sans-serif;
   color: #ef4444;
@@ -923,5 +930,21 @@ main {
   display: flex;
   gap: 10px;
   align-items: center;
+}
+
+@media (max-width: 900px) {
+  .filters {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .search-container {
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 768px) {
+  .search-container {
+    max-width: 200px;
+  }
 }
 </style>

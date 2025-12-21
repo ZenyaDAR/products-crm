@@ -6,22 +6,22 @@ const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     {
-      path: '/',
+      path: '/deliveries',
       name: 'deliveries',
       component: () => import('../views/DeliveriesView.vue'),
-      meta: { requiresAuth: true }
+      meta: { requiresAuth: true, requiredRole: 'admin' }
     },
     {
       path: '/delivery/:id',
       name: 'delivery',
       component: () => import('../views/DeliveriesView.vue'),
-      meta: { requiresAuth: true }
+      meta: { requiresAuth: true, requiredRole: 'admin' }
     },
     {
-      path: '/warehouse',
+      path: '/',
       name: 'warehouse',
       component: () => import('../views/WarehouseView.vue'),
-      meta: { requiresAuth: true }
+      meta: { requiresAuth: true, allowedRoles: ['admin', 'manager'] }
     },
     {
       path: '/suppliers',
@@ -38,13 +38,14 @@ const router = createRouter({
     {
       path: '/suppliers',
       name: 'suppliers',
-      component: () => import('../views/SuppliersView.vue')
+      component: () => import('../views/SuppliersView.vue'),
+      meta: { requiresAuth: true, requiredRole: 'admin' }
     },
     {
-      path: '/statistics',
-      name: 'statistics',
-      component: () => import('../views/DeliveriesView.vue'),
-      meta: { requiresAuth: true }
+      path: '/employees',
+      name: 'employees',
+      component: () => import('../views/EmployeesView.vue'),
+      meta: { requiresAuth: true, requiredRole: 'admin' }
     },
     {
       path: '/auth',
@@ -63,7 +64,16 @@ router.beforeEach((to) => {
   }
 
   if (to.meta.guestOnly && auth.token) {
-    return { name: 'home' }
+    return { name: 'warehouse' }
+  }
+
+  // Check role-based access
+  if (to.meta.requiredRole && auth.user?.role !== to.meta.requiredRole) {
+    return { name: 'warehouse' } // Redirect to default page if no permission
+  }
+
+  if (to.meta.allowedRoles && !to.meta.allowedRoles.includes(auth.user?.role)) {
+    return { name: 'warehouse' } // Redirect to default page if no permission
   }
 })
 

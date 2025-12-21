@@ -18,7 +18,7 @@ const getWidth = (count) => {
 </script>
 
 <template>
-  <div class="top-container">
+  <div class="top-container" v-if="topThreeProducts.length > 0">
     <h3>Top 3 Products Today</h3> 
     
     <div class="products-grid">

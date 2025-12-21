@@ -6,6 +6,7 @@ import deliveriesRoutes from './routes/deliveries.js'
 import salesRoutes from './routes/sales.js'
 import warehouseRoutes from './routes/warehouse.js'
 import suppliersRoutes from './routes/suppliers.js'
+import employeesRoutes from './routes/employees.js'
 
 dotenv.config()
 
@@ -21,6 +22,7 @@ app.use('/api/deliveries', deliveriesRoutes)
 app.use('/api/sales', salesRoutes)
 app.use('/api/warehouse', warehouseRoutes)
 app.use('/api/suppliers', suppliersRoutes)
+app.use('/api/employees', employeesRoutes)
 
 app.get('/health', (req, res) => {
     res.json({ status: 'OK' })

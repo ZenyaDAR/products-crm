@@ -13,19 +13,33 @@ router.get('/inventory', async (req, res) => {
                 p.SKU,
                 p.Name AS ProductName,
                 c.Name AS Category,
+                s.Name AS Supplier,
                 p.Unit,
                 p.PurchasePrice,
                 p.RetailPrice,
-                COALESCE(SUM(di.Quantity), 0) AS StockQuantity,
-                CASE
-                    WHEN COALESCE(SUM(di.Quantity), 0) = 0 THEN 'out_of_stock'
-                    WHEN COALESCE(SUM(di.Quantity), 0) < 20 THEN 'low_stock'
+                COALESCE(inv.TotalStock, 0) AS StockQuantity,
+                COALESCE(pen.PendingQty, 0) AS PendingQuantity,
+                CASE 
+                    WHEN COALESCE(inv.TotalStock, 0) = 0 THEN 'out_of_stock'
+                    WHEN COALESCE(inv.TotalStock, 0) < p.MinStock THEN 'low_stock'
                     ELSE 'in_stock'
                 END AS StockStatus
+        
             FROM Products p
             LEFT JOIN Categories c ON p.CategoryID = c.CategoryID
-            LEFT JOIN DeliveryItems di ON p.SKU = di.SKU
-            LEFT JOIN Deliveries d ON di.DeliveryID = d.DeliveryID AND d.Status = 'completed'
+            LEFT JOIN Suppliers s ON p.Supplier = s.SupplierID
+            LEFT JOIN (
+                SELECT SKU, SUM(Qty) AS TotalStock
+                FROM inventory
+                GROUP BY SKU
+            ) inv ON p.SKU = inv.SKU
+            LEFT JOIN (
+                SELECT di.SKU, SUM(di.Quantity) AS PendingQty
+                FROM deliveryitems di
+                JOIN deliveries d ON di.DeliveryID = d.DeliveryID
+                WHERE d.Status = 'pending'
+                GROUP BY di.SKU
+            ) pen ON p.SKU = pen.SKU
             WHERE p.Status = 'active'
         `
 
@@ -174,7 +188,7 @@ router.put('/products/:sku', async (req, res) => {
 
 // Create new product
 router.post('/products', async (req, res) => {
-    const { name, sku, category, unit, purchasePrice, retailPrice, supplier } = req.body
+    const { name, sku, category, unit, purchasePrice, retailPrice, supplier, brand, minStock } = req.body
 
     if (!name || !sku || !category || !unit || !supplier) {
         return res.status(400).json({ error: 'Всі поля обов\'язкові' })
@@ -201,9 +215,9 @@ router.post('/products', async (req, res) => {
 
         // Insert the product
         await db.execute(
-            `INSERT INTO Products (SKU, Name, CategoryID, Unit, PurchasePrice, RetailPrice, Supplier, Status)
-             VALUES (?, ?, ?, ?, ?, ?, ?, 'active')`,
-            [sku, name, categoryId, unit, Number(purchasePrice) || 0, Number(retailPrice) || 0, Number(supplier)]
+            `INSERT INTO Products (SKU, Name, CategoryID, Unit, Brand, PurchasePrice, RetailPrice, MinStock, Supplier,  Status)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'active')`,
+            [sku, name, categoryId, unit, brand, Number(purchasePrice) || 0, Number(retailPrice) || 0, Number(minStock) || 0, Number(supplier)]
         )
 
         res.json({ success: true })

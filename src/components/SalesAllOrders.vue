@@ -326,17 +326,6 @@ const formatPrice = (val) => Number(val).toFixed(2)
     font-size: 16px;
 }
 
-.primary-btn {
-  background: #3B82F6;
-  color: white;
-  border: none;
-  padding: 8px 20px;
-  border-radius: 6px;
-  font-family: Montserrat;
-  font-weight: 600;
-  cursor: pointer;
-}
-.primary-btn:hover { background: #2563EB; }
 
 .no-results { text-align: center; padding: 30px; color: #9CA3AF; }
 

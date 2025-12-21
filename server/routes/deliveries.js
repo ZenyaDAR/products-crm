@@ -58,7 +58,7 @@ router.get('/', async (req, res) => {
             FROM Deliveries d
             LEFT JOIN DeliveryItems di ON d.DeliveryID = di.DeliveryID
             GROUP BY d.DeliveryID
-            ORDER BY d.Date DESC
+            ORDER BY d.DeliveryID DESC
         `)
 
         res.json({
@@ -198,7 +198,7 @@ router.get('/:id', async (req, res) => {
 
     } catch (error) {
         console.error('Delivery error:', error);
-        res.status(500).json({ error: 'Помилка сервера' });
+        res.status(500).json({ error: 'Server error' });
     }
 });
 
@@ -333,7 +333,7 @@ router.put('/:id', async (req, res) => {
     } catch (error) {
         console.error('Update delivery error:', error)
         await connection.rollback()
-        res.status(500).json({ error: 'Помилка сервера' })
+        res.status(500).json({ error: 'Server error' })
     } finally {
         connection.release()
     }
@@ -362,7 +362,7 @@ router.post('/', async (req, res) => {
             : []
 
         if (!payloadItems.length) {
-            return res.status(400).json({ error: 'Необхідно додати хоча б один товар' })
+            return res.status(400).json({ error: 'You need to add at least one product' })
         }
 
         const skuPlaceholders = payloadItems.map(() => '?').join(',')
@@ -419,7 +419,7 @@ router.post('/', async (req, res) => {
     } catch (error) {
         console.error('Create delivery error:', error)
         await connection.rollback()
-        res.status(500).json({ error: 'Помилка сервера' })
+        res.status(500).json({ error: 'Server error' })
     } finally {
         connection.release()
     }
