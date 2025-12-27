@@ -94,7 +94,7 @@ h3 {
 .view-all-btn {
     background: transparent;
     border: none;
-    color: #3B82F6;
+    color: #2563eb; 
     font-family: Montserrat;
     font-size: 13px;
     font-weight: 600;
@@ -103,7 +103,7 @@ h3 {
 }
 
 .view-all-btn:hover {
-    color: #1D4ED8;
+    color: #1d4ed8; 
     text-decoration: underline;
 }
 
@@ -198,26 +198,20 @@ h3 {
 
 .status {
   font-family: Montserrat;
-  font-weight: 500;
-  font-size: 15px;
-  line-height: 1;
-  padding: 4px 5px;
-  border-radius: 4px;
-  width: fit-content;
-  margin: 0 auto;
+  font-weight: 600;
+  font-size: 13px; 
+  padding: 4px 12px;
+  border-radius: 6px;
+  width: 100%;
   text-transform: capitalize;
+  text-align: center;
+  white-space: nowrap;
+  color: #ffffff;
 }
 
 .status-completed { 
-  background: #06D6A0; 
-  color: #FFFFFF; 
-  border: 1px solid #10B981; 
-}
-
-.status-draft { 
-  background: #F59E0B; 
-  color: #FFFFFF; 
-  border: 1px solid #F59E0B; 
+    background-color: #10b981; 
+    border: none; 
 }
 
 .no-data { 
