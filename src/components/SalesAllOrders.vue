@@ -286,17 +286,24 @@ const formatPrice = (val) => Number(val).toFixed(2)
     font-weight: 400;
 }
 
-.full-table tr:hover { background: #F9FAFB; }
+.full-table tr:hover { 
+  background: #F9FAFB; 
+}
 
-.price { font-weight: 600; }
+.price { 
+  font-weight: 600; 
+}
 
 .status-badge {
-    background: #D1FAE5;
-    color: #065F46;
-    padding: 4px 8px;
-    border-radius: 4px;
-    font-size: 12px;
+    font-family: Montserrat;
+    display: inline-block;
+    background-color: #10b981;
+    color: #ffffff;
+    padding: 4px 12px;
+    border-radius: 6px;
+    font-size: 13px;
     font-weight: 600;
+    text-align: center;
 }
 
 .modal-footer {
@@ -326,9 +333,14 @@ const formatPrice = (val) => Number(val).toFixed(2)
     font-size: 16px;
 }
 
+.no-results { 
+  text-align: center; padding: 30px; color: #9CA3AF; 
+}
 
-.no-results { text-align: center; padding: 30px; color: #9CA3AF; }
-
-.fade-enter-active, .fade-leave-active { transition: opacity 0.2s; }
-.fade-enter-from, .fade-leave-to { opacity: 0; }
+.fade-enter-active, .fade-leave-active { 
+  transition: opacity 0.2s; 
+}
+.fade-enter-from, .fade-leave-to { 
+  opacity: 0; 
+}
 </style>

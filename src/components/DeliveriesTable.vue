@@ -4,21 +4,21 @@ import IconEdit from './icons/IconEdit.vue'
 const router = useRouter()
 
 const props = defineProps({
-  deliveries: {
-    type: Array,
+  deliveries: { 
+    type: Array, 
     required: true,
   },
-  activeDelivery: {
-    type: Object,
-    default: null,
+  activeDelivery: { 
+    type: Object, 
+    default: null, 
   },
-  formatDate: {
-    type: Function,
-    required: true,
+  formatDate: { 
+    type: Function, 
+    required: true, 
   },
-  editDelivery: {
-    type: Function,
-    required: true,
+  editDelivery: { 
+    type: Function, 
+    required: true, 
   },
 })
 
@@ -69,8 +69,10 @@ function changeActiveDelivery(delivery) {
   border: 1px solid #e5e7eb;
   border-radius: 5px;
   width: 100%;
-  display: grid;
-  gap: 15px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .row {
@@ -94,11 +96,13 @@ function changeActiveDelivery(delivery) {
 }
 
 .rows {
+  flex: 1;
   overflow-y: auto;
   overflow-x: visible;
   display: grid;
   gap: 15px;
   padding: 10px 15px 15px;
+  align-content: start;
   scrollbar-width: none;
 }
 .rows::-webkit-scrollbar {
@@ -133,35 +137,32 @@ function changeActiveDelivery(delivery) {
 }
 .status {
   font-family: Montserrat;
-  font-weight: 500;
-  font-size: 15px;
+  font-weight: 600;
+  font-size: 14px;
   line-height: 1;
-  padding: 4px 5px;
-  border-radius: 4px;
-  width: fit-content;
+  padding: 8px 12px;
+  min-width: 110px;
+  border-radius: 6px;
   margin: 0 auto;
   text-transform: capitalize;
-  min-width: 100px;
+  display: inline-block;
+  color: #ffffff;
 }
 .status-completed {
-  background: #06d6a0;
-  color: #ffffff;
-  border: 1px solid #10b981;
+  background-color: #10b981;
+  border: none;
 }
 .status-pending {
-  background: #f59e0b;
-  color: #ffffff;
-  border: 1px solid #f59e0b;
+  background-color: #f59e0b;
+  border: none;
 }
 .status-canceled {
-  background: #ef4444;
-  color: #ffffff;
-  border: 1px solid #ef4444;
+  background-color: #ef4444;
+  border: none;
 }
 .status-draft {
-  background: #6b7280;
-  color: #ffffff;
-  border: 1px solid #6b7280;
+  background-color: #6b7280;
+  border: none;
 }
 .icon-edit {
   width: 20px;

@@ -86,11 +86,6 @@ const resetEditForm = () => {
 }
 
 const submitAdd = async () => {
-  if (!addForm.value.login || !addForm.value.password || !addForm.value.fullName) {
-    errorMessage.value = 'Please fill in all required fields'
-    return
-  }
-
   isSaving.value = true
   errorMessage.value = ''
 
@@ -317,15 +312,17 @@ const getRoleBadge = (role) => {
     <div v-if="isEditModalOpen" class="modal-overlay" @click.self="closeEditModal">
       <form class="modal-card" @submit.prevent="submitEdit">
         <header class="modal-header">
-          <p class="modal-subtitle">{{ selectedEmployee?.FullName }}</p>
-          <h2>Edit Employee</h2>
+          <div class="header-titles">
+            <p class="modal-subtitle">{{ selectedEmployee?.FullName }}</p>
+            <h2>Edit Employee</h2>
+          </div>
           <button type="button" class="ghost-btn" @click="closeEditModal">✕</button>
         </header>
 
         <div class="modal-body">
           <label class="field">
             <span>Full Name</span>
-            <input v-model="editForm.fullName" type="text" placeholder="Enter full name" />
+            <input v-model="editForm.fullName" type="text" placeholder="Enter full name" required />
           </label>
 
           <label class="field">
@@ -584,11 +581,17 @@ main {
 .modal-header {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
+  align-items: center;
   gap: 10px;
   padding: 18px 20px;
   background: #f9fafb;
   border-bottom: 1px solid #e5e7eb;
+}
+
+.header-titles {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
 .modal-header h2 {
@@ -601,7 +604,7 @@ main {
 
 .modal-subtitle {
   font-family: Montserrat, sans-serif;
-  margin: 0 0 4px;
+  margin: 0;
   font-size: 13px;
   color: #6b7280;
 }

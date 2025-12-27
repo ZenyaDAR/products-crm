@@ -1,9 +1,11 @@
 <script setup>
 import { onMounted, ref, computed } from 'vue'
+import { useRouter } from 'vue-router'
 import { useWarehouseStore } from '@/stores/warehouse'
 import { useDeliveriesStore } from '@/stores/deliveries'
 import PageToolbar from '@/components/PageToolbar.vue'
 
+const router = useRouter()
 const warehouseStore = useWarehouseStore()
 const deliveriesStore = useDeliveriesStore()
 
@@ -13,23 +15,63 @@ const searchQuery = ref('')
 
 const isCreateModalOpen = ref(false)
 const isEditModalOpen = ref(false)
+const isInventoryModalOpen = ref(false)
 
 const editingProduct = ref(null)
 const isSaving = ref(false)
 const errorMessage = ref('')
-
 const suppliers = ref([])
+
+const selectedForOrder = ref([]) 
+const showCategoryDropdown = ref(false)
+
+const getProductSupplier = (p) => {
+    return p.SupplierName || p.Supplier || ''
+}
+
+const currentSelectedSupplier = computed(() => {
+  if (selectedForOrder.value.length === 0) return null
+  const firstSku = selectedForOrder.value[0]
+  const product = warehouseStore.products.find(p => p.SKU === firstSku)
+  return product ? getProductSupplier(product) : null
+})
+
+const canSelect = (product) => {
+  const supp = getProductSupplier(product)
+  if (!supp) return false
+  if (selectedForOrder.value.length === 0) return true
+  return supp === currentSelectedSupplier.value
+}
+
+const createOrderFromSelected = () => {
+    if (selectedForOrder.value.length === 0) return
+    
+    const itemsToOrder = warehouseStore.products
+        .filter(p => selectedForOrder.value.includes(p.SKU))
+        .map(p => ({
+            SKU: p.SKU,
+            ProductName: p.ProductName,
+            SupplierName: getProductSupplier(p), 
+            Quantity: 0, 
+            PurchasePrice: p.PurchasePrice
+        }))
+
+    localStorage.setItem('warehouseOrderDraft', JSON.stringify({
+        supplierName: currentSelectedSupplier.value,
+        items: itemsToOrder
+    }))
+
+    window.location.href = '/deliveries'
+}
 
 const createForm = ref({
   name: '',
   sku: '',
   category: '',
   unit: 'kg',
-  purchasePrice: 0,
-  retailPrice: 0,
-  supplier: null,
-  brand: '',
-  minStock: 0,
+  purchasePrice: '',
+  retailPrice: '',
+  supplier: '',
 })
 
 const editForm = ref({
@@ -37,14 +79,30 @@ const editForm = ref({
   retailPrice: '',
 })
 
+const filteredCategorySuggestions = computed(() => {
+  const input = createForm.value.category.trim().toLowerCase()
+  if (!input) return []
+  return warehouseStore.categories.filter(cat => 
+    cat.toLowerCase().includes(input)
+  )
+})
+
+const selectCategorySuggestion = (categoryName) => {
+  createForm.value.category = categoryName
+  showCategoryDropdown.value = false
+}
+
+const hideDropdownDelayed = () => {
+  setTimeout(() => {
+    showCategoryDropdown.value = false
+  }, 200)
+}
+
 const formatDate = (dateString) => {
   if (!dateString) return 'No data'
   try {
     const date = new Date(dateString)
-    const day = String(date.getDate()).padStart(2, '0')
-    const month = String(date.getMonth() + 1).padStart(2, '0')
-    const year = date.getFullYear()
-    return `${day}.${month}.${year}`
+    return date.toLocaleDateString('en-GB')
   } catch (e) {
     return dateString
   }
@@ -82,6 +140,10 @@ const categoryOptions = computed(() => {
 const filteredProducts = computed(() => {
   let result = [...warehouseStore.products]
 
+  if (currentSelectedSupplier.value) {
+     result = result.filter(p => getProductSupplier(p) === currentSelectedSupplier.value)
+  }
+
   // Apply category filter
   if (selectedCategory.value !== 'all') {
     result = result.filter((product) => product.Category === selectedCategory.value)
@@ -99,7 +161,7 @@ const filteredProducts = computed(() => {
       const nameMatch = product.ProductName.toLowerCase().includes(query)
       const skuMatch = product.SKU.toLowerCase().includes(query)
       const categoryMatch = product.Category.toLowerCase().includes(query)
-      const supplierMatch = product.Supplier.toLowerCase().includes(query)
+      const supplierMatch = (getProductSupplier(product) || '').toLowerCase().includes(query)
       return nameMatch || skuMatch || categoryMatch || supplierMatch
     })
   }
@@ -118,6 +180,13 @@ const loadData = async () => {
   ])
 }
 
+const onFilterChange = async () => {
+  await warehouseStore.fetchInventory({
+    category: selectedCategory.value,
+    status: selectedStatus.value,
+  })
+}
+
 // Note: Filtering is now handled by computed property filteredProducts
 // No need to fetch data on filter change
 
@@ -134,28 +203,25 @@ const closeCreateModal = () => {
 
 const resetCreateForm = () => {
   createForm.value = {
-    name: '',
-    sku: '',
-    category: '',
-    unit: 'kg',
-    purchasePrice: 0,
-    retailPrice: 0,
-    supplier: null,
-    brand: '',
-    minStock: 0,
+    name: '', 
+    sku: '', 
+    category: '', 
+    unit: 'kg', 
+    purchasePrice: '', 
+    retailPrice: '', 
+    supplier: '',
   }
   errorMessage.value = ''
+  showCategoryDropdown.value = false
 }
 
 const submitCreate = async () => {
-  if (
-    !createForm.value.name ||
-    !createForm.value.sku ||
-    !createForm.value.category ||
-    createForm.value.supplier === null ||
-    createForm.value.supplier === ''
+  if (!createForm.value.name || 
+  !createForm.value.sku || 
+  !createForm.value.category || 
+  !createForm.value.supplier
   ) {
-    errorMessage.value = 'Please fill in all required fields'
+    errorMessage.value = "Please fill in all required fields"
     return
   }
 
@@ -190,8 +256,8 @@ const closeEditModal = () => {
 }
 
 const resetEditForm = () => {
-  editForm.value = {
-    purchasePrice: '',
+  editForm.value = { 
+    purchasePrice: '', 
     retailPrice: '',
   }
   errorMessage.value = ''
@@ -224,6 +290,14 @@ const deleteProduct = async (product) => {
   } catch (error) {
     alert('Failed to delete product')
   }
+}
+
+const openInventoryModal = () => {
+  isInventoryModalOpen.value = true
+}
+
+const closeInventoryModal = () => {
+  isInventoryModalOpen.value = false
 }
 
 onMounted(async () => {
@@ -278,18 +352,29 @@ onMounted(async () => {
       </div>
     </div>
 
-    <!-- Filters -->
-    <div class="filters">
-      <select v-model="selectedCategory" class="filter-select">
-        <option v-for="option in categoryOptions" :key="option.value" :value="option.value">
-          {{ option.label }}
-        </option>
-      </select>
-      <select v-model="selectedStatus" class="filter-select">
-        <option v-for="option in statusOptions" :key="option.value" :value="option.value">
-          {{ option.label }}
-        </option>
-      </select>
+    <!-- Filters & Controls -->
+    <div class="controls-row">
+        <div class="filters">
+            <select v-model="selectedCategory" @change="onFilterChange" class="filter-select">
+                <option v-for="option in categoryOptions" :key="option.value" :value="option.value">
+                {{ option.label }}
+                </option>
+            </select>
+            <select v-model="selectedStatus" @change="onFilterChange" class="filter-select">
+                <option v-for="option in statusOptions" :key="option.value" :value="option.value">
+                {{ option.label }}
+                </option>
+            </select>
+        </div>
+
+        <button 
+             class="secondary-btn btn-create-order" 
+             :disabled="selectedForOrder.length === 0"
+             @click="createOrderFromSelected"
+             :class="{ 'btn-active-order': selectedForOrder.length > 0 }"
+        >
+             Create Order from Selected
+        </button>
     </div>
 
     <!-- Data Table -->
@@ -298,6 +383,7 @@ onMounted(async () => {
         <table class="data-table">
           <thead>
             <tr>
+              <th style="width: 40px"></th>
               <th>Product Name</th>
               <th>SKU</th>
               <th>Category</th>
@@ -311,19 +397,28 @@ onMounted(async () => {
           </thead>
           <tbody>
             <tr v-if="warehouseStore.loading">
-              <td colspan="8" class="text-center">Loading...</td>
+              <td colspan="10" class="text-center">Loading...</td>
             </tr>
             <tr v-else-if="filteredProducts.length === 0">
-              <td colspan="9" class="text-center">
+              <td colspan="10" class="text-center">
                 <span v-if="searchQuery">No products match your search.</span>
                 <span v-else>No products found</span>
               </td>
             </tr>
             <tr v-else v-for="product in filteredProducts" :key="product.SKU">
+              <td>
+                  <input 
+                      type="checkbox" 
+                      :value="product.SKU" 
+                      v-model="selectedForOrder"
+                      :disabled="!canSelect(product)"
+                      class="row-checkbox"
+                  >
+              </td>
               <td class="product-name">{{ product.ProductName }}</td>
               <td>{{ product.SKU }}</td>
               <td>{{ product.Category }}</td>
-              <td>{{ product.Supplier }}</td>
+              <td>{{ product.SupplierName || product.Supplier }}</td>
               <td>{{ Number(product.StockQuantity).toFixed(2) }} {{ product.Unit }}</td>
               <td>
                 <span :class="['badge', getStatusBadge(product.StockStatus).class]">
@@ -332,42 +427,40 @@ onMounted(async () => {
               </td>
               <td>{{ formatCurrency(product.PurchasePrice) }}</td>
               <td>{{ formatCurrency(product.RetailPrice) }}</td>
-              <td class="actions-wrapper">
-                <div class="actions">
-                  <button class="icon-btn" @click="openEditModal(product)" title="Edit">
-                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                      <path
-                        d="M11.333 2.00004C11.5081 1.82494 11.716 1.68605 11.9447 1.59129C12.1735 1.49653 12.4187 1.44775 12.6663 1.44775C12.914 1.44775 13.1592 1.49653 13.3879 1.59129C13.6167 1.68605 13.8246 1.82494 13.9997 2.00004C14.1748 2.17513 14.3137 2.383 14.4084 2.61178C14.5032 2.84055 14.552 3.08575 14.552 3.33337C14.552 3.58099 14.5032 3.82619 14.4084 4.05497C14.3137 4.28374 14.1748 4.49161 13.9997 4.66671L5.33301 13.3334L1.33301 14.6667L2.66634 10.6667L11.333 2.00004Z"
-                        stroke="currentColor"
-                        stroke-width="1.5"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                      />
-                    </svg>
-                  </button>
-                  <button
-                    class="icon-btn icon-btn-delete"
-                    @click="deleteProduct(product)"
-                    title="Delete"
-                  >
-                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                      <path
-                        d="M2 4H3.33333H14"
-                        stroke="currentColor"
-                        stroke-width="1.5"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                      />
-                      <path
-                        d="M5.33301 4.00004V2.66671C5.33301 2.31309 5.47348 1.97395 5.72353 1.7239C5.97358 1.47385 6.31272 1.33337 6.66634 1.33337H9.33301C9.68663 1.33337 10.0258 1.47385 10.2758 1.7239C10.5259 1.97395 10.6663 2.31309 10.6663 2.66671V4.00004M12.6663 4.00004V13.3334C12.6663 13.687 12.5259 14.0261 12.2758 14.2762C12.0258 14.5262 11.6866 14.6667 11.333 14.6667H4.66634C4.31272 14.6667 3.97358 14.5262 3.72353 14.2762C3.47348 14.0261 3.33301 13.687 3.33301 13.3334V4.00004H12.6663Z"
-                        stroke="currentColor"
-                        stroke-width="1.5"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                      />
-                    </svg>
-                  </button>
-                </div>
+              <td class="actions">
+                <button class="icon-btn" @click="openEditModal(product)" title="Edit">
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                    <path
+                      d="M11.333 2.00004C11.5081 1.82494 11.716 1.68605 11.9447 1.59129C12.1735 1.49653 12.4187 1.44775 12.6663 1.44775C12.914 1.44775 13.1592 1.49653 13.3879 1.59129C13.6167 1.68605 13.8246 1.82494 13.9997 2.00004C14.1748 2.17513 14.3137 2.383 14.4084 2.61178C14.5032 2.84055 14.552 3.08575 14.552 3.33337C14.552 3.58099 14.5032 3.82619 14.4084 4.05497C14.3137 4.28374 14.1748 4.49161 13.9997 4.66671L5.33301 13.3334L1.33301 14.6667L2.66634 10.6667L11.333 2.00004Z"
+                      stroke="currentColor"
+                      stroke-width="1.5"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                  </svg>
+                </button>
+                <button
+                  class="icon-btn icon-btn-delete"
+                  @click="deleteProduct(product)"
+                  title="Delete"
+                >
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                    <path
+                      d="M2 4H3.33333H14"
+                      stroke="currentColor"
+                      stroke-width="1.5"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                    <path
+                      d="M5.33301 4.00004V2.66671C5.33301 2.31309 5.47348 1.97395 5.72353 1.7239C5.97358 1.47385 6.31272 1.33337 6.66634 1.33337H9.33301C9.68663 1.33337 10.0258 1.47385 10.2758 1.7239C10.5259 1.97395 10.6663 2.31309 10.6663 2.66671V4.00004M12.6663 4.00004V13.3334C12.6663 13.687 12.5259 14.0261 12.2758 14.2762C12.0258 14.5262 11.6866 14.6667 11.333 14.6667H4.66634C4.31272 14.6667 3.97358 14.5262 3.72353 14.2762C3.47348 14.0261 3.33301 13.687 3.33301 13.3334V4.00004H12.6663Z"
+                      stroke="currentColor"
+                      stroke-width="1.5"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                  </svg>
+                </button>
               </td>
             </tr>
           </tbody>
@@ -400,29 +493,30 @@ onMounted(async () => {
           </div>
 
           <div class="form-grid">
-            <label class="field">
+            
+            <!-- Autocomplete -->
+            <label class="field autocomplete-wrapper">
               <span>Category <span class="required">*</span></span>
-              <select name="" id="" v-model="createForm.category" required>
-                <option value="" disabled selected>Select category</option>
-                <option
-                  v-for="category in warehouseStore.categories"
-                  :key="category"
-                  :value="category"
-                >
-                  {{ category }}
-                </option>
-              </select>
+              <input
+                v-model="createForm.category"
+                type="text"
+                placeholder="Meat, Vegetables, etc."
+                required
+                @focus="showCategoryDropdown = true"
+                @blur="hideDropdownDelayed"
+              />
+              <ul v-if="showCategoryDropdown && filteredCategorySuggestions.length > 0" class="suggestions-list">
+                  <li 
+                      v-for="cat in filteredCategorySuggestions" 
+                      :key="cat"
+                      @click="selectCategorySuggestion(cat)"
+                      class="suggestion-item"
+                  >
+                      {{ cat }}
+                  </li>
+              </ul>
             </label>
-            <label class="field">
-              <span>Brand</span>
-              <input v-model="createForm.brand" type="text" placeholder="Enter brand" />
-            </label>
-          </div>
-          <div class="form-grid">
-            <label class="field">
-              <span>Min Stock</span>
-              <input v-model="createForm.minStock" type="number" placeholder="Enter min stock" />
-            </label>
+
             <label class="field">
               <span>Unit <span class="required">*</span></span>
               <select v-model="createForm.unit" required>
@@ -533,9 +627,32 @@ onMounted(async () => {
       </form>
     </div>
   </transition>
+
+  <!-- Inventory Modal -->
+  <transition name="fade">
+    <div v-if="isInventoryModalOpen" class="modal-overlay" @click.self="closeInventoryModal">
+      <div class="modal-card">
+        <header class="modal-header">
+          <div>
+            <h2>Inventory</h2>
+          </div>
+          <button type="button" class="ghost-btn" @click="closeInventoryModal">✕</button>
+        </header>
+
+        <div class="modal-body">
+          <p class="muted">Inventory feature coming soon.</p>
+        </div>
+
+        <footer class="modal-footer">
+          <button type="button" class="secondary-btn" @click="closeInventoryModal">Close</button>
+        </footer>
+      </div>
+    </div>
+  </transition>
 </template>
 
 <style scoped>
+/* Page Styles */
 main {
   display: flex;
   flex-direction: column;
@@ -610,6 +727,30 @@ main {
   flex-shrink: 0;
 }
 
+.filter-select {
+  font-family: Montserrat, sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  color: #111827;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 10px 14px;
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+.filter-select:hover {
+  border-color: #2563eb;
+}
+
+.filter-select:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+/* Search */
 .search-container {
   flex: 1;
   display: flex;
@@ -637,29 +778,6 @@ main {
 
 .search-input::placeholder {
   color: #9ca3af;
-}
-
-.filter-select {
-  font-family: Montserrat, sans-serif;
-  font-size: 14px;
-  font-weight: 500;
-  color: #111827;
-  background: #ffffff;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  padding: 10px 14px;
-  cursor: pointer;
-  outline: none;
-  transition: border-color 0.2s ease;
-}
-
-.filter-select:hover {
-  border-color: #2563eb;
-}
-
-.filter-select:focus {
-  border-color: #2563eb;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
 }
 
 /* Table */
@@ -912,6 +1030,72 @@ main {
   color: #9ca3af;
 }
 
+/* Buttons */
+.primary-btn,
+.secondary-btn,
+.ghost-btn {
+  font-family: Montserrat, sans-serif;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.primary-btn {
+  background: #2563eb;
+  color: #ffffff;
+  padding: 10px 16px;
+}
+
+.primary-btn:hover {
+  background: #1d4ed8;
+}
+
+.primary-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.secondary-btn {
+  background: #ffffff;
+  color: #6b7280;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-family: Montserrat, sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.secondary-btn:hover {
+  background: #f9fafb;
+  border-color: #d1d5db;
+}
+
+.secondary-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: #fff;
+  color: #9ca3af;
+  border-color: #e5e7eb;
+}
+
+.ghost-btn {
+  background: transparent;
+  color: #6b7280;
+  padding: 6px 8px;
+  border-color: transparent;
+  font-size: 20px;
+}
+
+.ghost-btn:hover {
+  color: #ef4444;
+}
+
 .error-text {
   font-family: Montserrat, sans-serif;
   color: #ef4444;
@@ -932,6 +1116,64 @@ main {
   align-items: center;
 }
 
+/* Autocomplete */
+.autocomplete-wrapper {
+  position: relative;
+}
+
+.suggestions-list {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 100%;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  margin: 4px 0 0 0;
+  padding: 0;
+  list-style: none;
+  z-index: 50;
+  max-height: 150px;
+  overflow-y: auto;
+}
+
+.suggestion-item {
+  padding: 10px 12px;
+  font-size: 14px;
+  cursor: pointer;
+  color: #111827;
+  transition: background 0.1s;
+}
+
+.suggestion-item:hover {
+  background: #f3f4f6;
+  color: #2563eb;
+}
+
+/* Checkbox */
+.row-checkbox {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: #2563eb;
+}
+
+/* Controls Row */
+.controls-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-shrink: 0;
+  gap: 20px;
+}
+
+.btn-active-order {
+  background-color: #2563eb !important;
+  color: white !important;
+  border-color: #2563eb !important;
+}
+
 @media (max-width: 900px) {
   .filters {
     flex-direction: column;
@@ -939,6 +1181,7 @@ main {
   }
   .search-container {
     max-width: 100%;
+    margin-left: 0;
   }
 }
 
