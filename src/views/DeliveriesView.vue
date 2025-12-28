@@ -85,6 +85,39 @@ onMounted(async () => {
   if (activeDelivery.value) {
     await loadDeliveryDetails(activeDelivery.value.DeliveryID)
   }
+
+  const draftOrder = localStorage.getItem('warehouseOrderDraft')
+  if (draftOrder) {
+    try {
+      const parsed = JSON.parse(draftOrder)
+      const targetSupplier = suppliers.value.find((s) => s.Name === parsed.supplierName)
+
+      if (targetSupplier) {
+        createForm.value.supplierId = targetSupplier.SupplierID
+
+        supplierProducts.value = await deliveriesStore.getSupplierProducts(targetSupplier.SupplierID)
+
+        createForm.value.items = parsed.items.map((draftItem) => {
+          const realProduct = supplierProducts.value.find((p) => p.SKU === draftItem.SKU)
+          return {
+            SKU: draftItem.SKU,
+            Quantity: 0,
+            ProductName: draftItem.ProductName,
+            PurchasePrice: realProduct ? realProduct.PurchasePrice : draftItem.PurchasePrice,
+            Unit: realProduct ? realProduct.Unit : 'pcs',
+          }
+        })
+
+        setTimeout(() => {
+          isCreateModalOpen.value = true
+        }, 100)
+      }
+    } catch (e) {
+      console.error(e)
+    } finally {
+      localStorage.removeItem('warehouseOrderDraft')
+    }
+  }
 })
 
 watch(activeDelivery, async (newVal) => {
@@ -105,8 +138,8 @@ watch(
 const formatDate = (v) => {
   if (!v) return ''
   try {
-    const [y, m, d] = v.split('T')[0].split('-')
-    return `${d}.${m}.${y}`
+    const d = new Date(v)
+    return d.toLocaleDateString('en-GB')
   } catch (e) {
     return v
   }
@@ -190,7 +223,7 @@ const editDelivery = async (delivery) => {
     availableProducts.value = await deliveriesStore.getAvailableProducts(delivery.DeliveryID)
   } catch (e) {
     availableProducts.value = []
-    editError.value = 'Failed to load supplier products'
+    editError.value = 'Failed to load products'
   }
   isEditModalOpen.value = true
 }
@@ -243,7 +276,7 @@ const submitEdit = async () => {
       resetEditForm()
     }
   } catch (e) {
-    editError.value = e?.response?.data?.error || 'Failed to update order'
+    editError.value = e?.response?.data?.error || 'Failed to update'
   } finally {
     isSavingEdit.value = false
   }
@@ -261,7 +294,7 @@ const onSupplierChange = async () => {
 
 const submitCreate = async () => {
   if (!createForm.value.supplierId) {
-    createError.value = 'Select a supplier'
+    createError.value = 'Select supplier'
     return
   }
   if (!createForm.value.items.length) {
@@ -293,7 +326,7 @@ const submitCreate = async () => {
       closeCreateModal()
     }
   } catch (e) {
-    createError.value = e?.response?.data?.error || 'Failed to create order'
+    createError.value = e?.response?.data?.error || 'Failed to create'
   } finally {
     isSavingCreate.value = false
   }
@@ -376,7 +409,7 @@ const submitCreate = async () => {
             </div>
 
             <p v-if="isCompleted" class="info-banner">
-              Order is completed. Editing is disabled.
+              Order completed. Editing disabled.
             </p>
 
             <div v-if="editForm.items.length" class="items-rows">
@@ -408,7 +441,7 @@ const submitCreate = async () => {
                     @click="removeItemRow(idx)"
                     :disabled="isCompleted"
                   >
-                    Remove
+                    Delete
                   </button>
                 </template>
 
@@ -434,7 +467,7 @@ const submitCreate = async () => {
                   <div class="item-static">
                     <div class="item-title">
                       {{
-                        item.ProductName ? `${item.ProductName} (${item.SKU})` : 'Select product'
+                        item.ProductName ? `${item.ProductName}` : 'Select product'
                       }}
                     </div>
                     <div class="item-sub" v-if="item.PurchasePrice">
@@ -460,7 +493,7 @@ const submitCreate = async () => {
                     @click="removeItemRow(idx)"
                     :disabled="isCompleted"
                   >
-                    Remove
+                    Delete
                   </button>
                 </template>
               </div>
@@ -516,7 +549,7 @@ const submitCreate = async () => {
             <div class="section-head">
               <div class="section-title">
                 <h3>Products</h3>
-                <p class="muted">Add products from supplier</p>
+                <p class="muted">Add products</p>
               </div>
               <button
                 v-if="supplierProducts.length"
@@ -538,17 +571,17 @@ const submitCreate = async () => {
                       :key="product.SKU"
                       :value="product.SKU"
                     >
-                      {{ product.Name }} ({{ product.SKU }})
+                      {{ product.Name }}
                     </option>
                   </select>
                 </label>
                 <div class="item-static">
                   <div class="item-title">
-                    {{ item.ProductName ? `${item.ProductName} (${item.SKU})` : 'Select product' }}
+                    {{ item.ProductName || 'Select product' }}
                   </div>
                   <div class="item-sub" v-if="item.PurchasePrice">
-                    Price: {{ item.PurchasePrice }}₴
-                    <span v-if="item.Unit">/ {{ item.Unit }}</span>
+                    {{ item.PurchasePrice }}₴
+                    <span v-if="item.Unit"> / {{ item.Unit }}</span>
                   </div>
                 </div>
                 <label class="field compact">
@@ -557,20 +590,15 @@ const submitCreate = async () => {
                     v-model.number="item.Quantity"
                     type="number"
                     min="0"
-                    step="1"
-                    placeholder="Qty"
                     required
                   />
                 </label>
                 <button type="button" class="ghost-btn" @click="removeCreateItemRow(idx)">
-                  Remove
+                  Delete
                 </button>
               </div>
             </div>
-            <p v-else class="muted">Select a supplier to add items.</p>
-            <p v-if="!supplierProducts.length && createForm.supplierId" class="muted">
-              No active products available for this supplier.
-            </p>
+            <p v-else class="muted">Select supplier to add items.</p>
           </section>
         </div>
 
@@ -589,11 +617,11 @@ const submitCreate = async () => {
 
 <style scoped>
 .page-title {
-    margin: 0;
-    font-family: Montserrat;
-    font-size: 24px;
-    font-weight: 700;
-    color: #111827;
+  margin: 0;
+  font-family: Montserrat;
+  font-size: 24px;
+  font-weight: 700;
+  color: #111827;
 }
 
 main {
@@ -779,6 +807,55 @@ main {
   border-color: #2563eb;
   box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.12);
 }
+.primary-btn,
+.secondary-btn,
+.ghost-btn {
+  font-family: Montserrat;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.primary-btn {
+  background: #2563eb;
+  color: #ffffff;
+  padding: 10px 16px;
+}
+
+.primary-btn:hover {
+  background: #1d4ed8;
+}
+
+.primary-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.secondary-btn {
+  background: #ffffff;
+  color: #111827;
+  border-color: #e5e7eb;
+  padding: 9px 14px;
+}
+
+.secondary-btn:hover {
+  border-color: #2563eb;
+  color: #2563eb;
+}
+
+.ghost-btn {
+  background: transparent;
+  color: #6b7280;
+  padding: 6px 8px;
+  border-color: transparent;
+}
+
+.ghost-btn:hover {
+  color: #ef4444;
+}
+
 .muted {
   font-size: 13px;
   color: #6b7280;

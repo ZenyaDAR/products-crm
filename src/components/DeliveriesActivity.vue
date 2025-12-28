@@ -94,28 +94,29 @@ const { delivery, formatDate, formatTime } = defineProps({
   line-height: 1;
 }
 .status {
-  font-size: 15px;
-  font-weight: 500;
-  padding: 4px 5px;
-  border-radius: 4px;
+  font-family: Montserrat;
+  font-weight: 600;
+  font-size: 13px;
+  padding: 4px 12px;
+  border-radius: 6px;
   width: fit-content;
   text-transform: capitalize;
-  line-height: 1;
+  line-height: 1.4;
 }
 .status-completed {
-  background: #06d6a0;
+  background-color: #10b981;
   color: #ffffff;
 }
 .status-pending {
-  background: #f59e0b;
+  background-color: #f59e0b;
   color: #ffffff;
 }
 .status-canceled {
-  background: #ef4444;
+  background-color: #ef4444;
   color: #ffffff;
 }
 .status-draft {
-  background: #6b7280;
+  background-color: #6b7280;
   color: #ffffff;
 }
 .activity-timeline {

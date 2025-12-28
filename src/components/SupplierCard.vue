@@ -86,25 +86,25 @@ h3 {
 }
 
 .status {
-  font-family: Montserrat;
-  font-weight: 500;
-  font-size: 12px;
-  line-height: 1;
-  padding: 4px 5px;
-  border-radius: 4px;
-  text-transform: capitalize;
+    font-family: Montserrat;
+    font-weight: 600;
+    font-size: 13px;
+    text-transform: capitalize;
+    color: #ffffff;
+    border-radius: 6px;
+    padding: 4px 12px;
+    min-width: 80px;
+    text-align: center;
 }
 
-.status-active {
-  background: #06d6a0;
-  color: #ffffff;
-  border: 1px solid #10b981;
+.status-active { 
+    background-color: #10b981; 
+    border: none;
 }
 
-.status-inactive {
-  background: #ef4444;
-  color: #ffffff;
-  border: 1px solid #ef4444;
+.status-inactive { 
+    background-color: #6b7280; 
+    border: none;
 }
 
 .info-grid {

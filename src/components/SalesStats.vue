@@ -82,9 +82,9 @@ const capitalizedPrePrevMonth = prePrevMonthName.charAt(0).toUpperCase() + prePr
 
 .value {
   font-family: Montserrat;
-  font-size: 24px;
+  font-size: 28px;
   font-weight: 700;
-  color: #111827;
+  color: #2563eb;
 }
 
 .change {
@@ -94,7 +94,13 @@ const capitalizedPrePrevMonth = prePrevMonthName.charAt(0).toUpperCase() + prePr
   margin-top: 8px;
 }
 
-.positive { color: #10B981; }
-.negative { color: #EF4444; }
-.neutral { color: #9CA3AF; }
+.positive { 
+  color: #10b981;
+}
+.negative { 
+  color: #ef4444;
+}
+.neutral { 
+  color: #6b7280;
+}
 </style>

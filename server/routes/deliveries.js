@@ -27,8 +27,7 @@ async function fetchDeliveryWithDetails(connection, deliveryId) {
                p.Name AS ProductName, 
                p.Unit,
                p.PurchasePrice,
-               p.RetailPrice,
-               p.Brand
+               p.RetailPrice
         FROM DeliveryItems di
         JOIN Products p ON di.SKU = p.SKU
         WHERE di.DeliveryID = ?
@@ -169,8 +168,7 @@ router.get('/:id', async (req, res) => {
                    p.Name AS ProductName, 
                    p.Unit,
                    p.PurchasePrice,
-                   p.RetailPrice,
-                   p.Brand
+                   p.RetailPrice
             FROM DeliveryItems di
             JOIN Products p ON di.SKU = p.SKU
             WHERE di.DeliveryID = ?
