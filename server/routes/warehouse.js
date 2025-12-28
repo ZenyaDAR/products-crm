@@ -9,7 +9,7 @@ router.get('/inventory', async (req, res) => {
         const { category, status } = req.query
 
         let query = `
-            SELECT 
+            SELECT
                 p.SKU,
                 p.Name AS ProductName,
                 c.Name AS Category,
@@ -17,13 +17,14 @@ router.get('/inventory', async (req, res) => {
                 p.Unit,
                 p.PurchasePrice,
                 p.RetailPrice,
+                p.MinStock AS MinQuantity,
                 COALESCE(inv.TotalStock, 0) AS StockQuantity,
-                CASE 
+                CASE
                     WHEN COALESCE(inv.TotalStock, 0) = 0 THEN 'out_of_stock'
                     WHEN COALESCE(inv.TotalStock, 0) <= p.MinStock THEN 'low_stock'
                     ELSE 'in_stock'
                 END AS StockStatus
-        
+
             FROM products p
             LEFT JOIN categories c ON p.CategoryID = c.CategoryID
             LEFT JOIN suppliers s ON p.Supplier = s.SupplierID
@@ -133,12 +134,12 @@ router.get('/categories', async (req, res) => {
 // Update product
 router.put('/products/:sku', async (req, res) => {
     const { sku } = req.params
-    const { purchasePrice, retailPrice } = req.body
+    const { purchasePrice, retailPrice, minQuantity } = req.body
 
     try {
         await db.query(
-            `UPDATE products SET PurchasePrice = ?, RetailPrice = ? WHERE SKU = ?`,
-            [Number(purchasePrice), Number(retailPrice), sku]
+            `UPDATE products SET PurchasePrice = ?, RetailPrice = ?, MinStock = ? WHERE SKU = ?`,
+            [Number(purchasePrice), Number(retailPrice), Number(minQuantity), sku]
         )
         res.json({ success: true })
     } catch (error) {

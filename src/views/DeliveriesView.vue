@@ -260,7 +260,6 @@ const submitEdit = async () => {
               Quantity: Number(item.Quantity),
               PurchasePrice: item.PurchasePrice !== '' ? Number(item.PurchasePrice) : null,
               BatchNumber: item.BatchNumber || null,
-              ManufactureDate: item.ManufactureDate || null,
               ExpiryDate: item.ExpiryDate || null,
             }))
         : [],

@@ -284,7 +284,7 @@ router.put('/:id', async (req, res) => {
                     await connection.execute(
                         `
                         UPDATE DeliveryItems
-                        SET SKU = ?, Quantity = ?, PurchasePrice = ?, BatchNumber = ?, ManufactureDate = ?, ExpiryDate = ?
+                        SET SKU = ?, Quantity = ?, PurchasePrice = ?, BatchNumber = ?, ExpiryDate = ?
                         WHERE DeliveryItemID = ? AND DeliveryID = ?
                     `,
                         [
@@ -292,7 +292,6 @@ router.put('/:id', async (req, res) => {
                             item.Quantity,
                             item.PurchasePrice ?? 0,
                             item.BatchNumber || null,
-                            item.ManufactureDate || null,
                             item.ExpiryDate || null,
                             item.DeliveryItemID,
                             deliveryId,
@@ -304,8 +303,8 @@ router.put('/:id', async (req, res) => {
                 await connection.execute(
                     `
                     INSERT INTO DeliveryItems 
-                    (DeliveryID, SKU, Quantity, PurchasePrice, BatchNumber, ManufactureDate, ExpiryDate)
-                    VALUES (?, ?, ?, ?, ?, ?, ?)
+                    (DeliveryID, SKU, Quantity, PurchasePrice, BatchNumber, ExpiryDate)
+                    VALUES (?, ?, ?, ?, ?, ?)
                 `,
                     [
                         deliveryId,
@@ -313,7 +312,6 @@ router.put('/:id', async (req, res) => {
                         item.Quantity,
                         item.PurchasePrice ?? 0,
                         item.BatchNumber || null,
-                        item.ManufactureDate || null,
                         item.ExpiryDate || null,
                     ]
                 )
@@ -394,8 +392,8 @@ router.post('/', async (req, res) => {
             await connection.execute(
                 `
                 INSERT INTO DeliveryItems 
-                (DeliveryID, SKU, Quantity, PurchasePrice, BatchNumber, ManufactureDate, ExpiryDate)
-                VALUES (?, ?, ?, ?, ?, ?, ?)
+                (DeliveryID, SKU, Quantity, PurchasePrice, BatchNumber, ExpiryDate)
+                VALUES (?, ?, ?, ?, ?, ?)
             `,
                 [
                     deliveryId,
@@ -403,7 +401,6 @@ router.post('/', async (req, res) => {
                     item.Quantity,
                     p?.PurchasePrice ?? 0,
                     item.BatchNumber || null,
-                    item.ManufactureDate || null,
                     item.ExpiryDate || null,
                 ]
             )

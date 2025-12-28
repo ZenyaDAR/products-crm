@@ -22,17 +22,17 @@ const isSaving = ref(false)
 const errorMessage = ref('')
 const suppliers = ref([])
 
-const selectedForOrder = ref([]) 
+const selectedForOrder = ref([])
 const showCategoryDropdown = ref(false)
 
 const getProductSupplier = (p) => {
-    return p.SupplierName || p.Supplier || ''
+  return p.SupplierName || p.Supplier || ''
 }
 
 const currentSelectedSupplier = computed(() => {
   if (selectedForOrder.value.length === 0) return null
   const firstSku = selectedForOrder.value[0]
-  const product = warehouseStore.products.find(p => p.SKU === firstSku)
+  const product = warehouseStore.products.find((p) => p.SKU === firstSku)
   return product ? getProductSupplier(product) : null
 })
 
@@ -44,24 +44,27 @@ const canSelect = (product) => {
 }
 
 const createOrderFromSelected = () => {
-    if (selectedForOrder.value.length === 0) return
-    
-    const itemsToOrder = warehouseStore.products
-        .filter(p => selectedForOrder.value.includes(p.SKU))
-        .map(p => ({
-            SKU: p.SKU,
-            ProductName: p.ProductName,
-            SupplierName: getProductSupplier(p), 
-            Quantity: 0, 
-            PurchasePrice: p.PurchasePrice
-        }))
+  if (selectedForOrder.value.length === 0) return
 
-    localStorage.setItem('warehouseOrderDraft', JSON.stringify({
-        supplierName: currentSelectedSupplier.value,
-        items: itemsToOrder
+  const itemsToOrder = warehouseStore.products
+    .filter((p) => selectedForOrder.value.includes(p.SKU))
+    .map((p) => ({
+      SKU: p.SKU,
+      ProductName: p.ProductName,
+      SupplierName: getProductSupplier(p),
+      Quantity: 0,
+      PurchasePrice: p.PurchasePrice,
     }))
 
-    window.location.href = '/deliveries'
+  localStorage.setItem(
+    'warehouseOrderDraft',
+    JSON.stringify({
+      supplierName: currentSelectedSupplier.value,
+      items: itemsToOrder,
+    }),
+  )
+
+  window.location.href = '/deliveries'
 }
 
 const createForm = ref({
@@ -71,20 +74,20 @@ const createForm = ref({
   unit: 'kg',
   purchasePrice: '',
   retailPrice: '',
+  minStock: '',
   supplier: '',
 })
 
 const editForm = ref({
   purchasePrice: '',
   retailPrice: '',
+  minQuantity: '',
 })
 
 const filteredCategorySuggestions = computed(() => {
   const input = createForm.value.category.trim().toLowerCase()
   if (!input) return []
-  return warehouseStore.categories.filter(cat => 
-    cat.toLowerCase().includes(input)
-  )
+  return warehouseStore.categories.filter((cat) => cat.toLowerCase().includes(input))
 })
 
 const selectCategorySuggestion = (categoryName) => {
@@ -141,7 +144,7 @@ const filteredProducts = computed(() => {
   let result = [...warehouseStore.products]
 
   if (currentSelectedSupplier.value) {
-     result = result.filter(p => getProductSupplier(p) === currentSelectedSupplier.value)
+    result = result.filter((p) => getProductSupplier(p) === currentSelectedSupplier.value)
   }
 
   // Apply category filter
@@ -203,12 +206,13 @@ const closeCreateModal = () => {
 
 const resetCreateForm = () => {
   createForm.value = {
-    name: '', 
-    sku: '', 
-    category: '', 
-    unit: 'kg', 
-    purchasePrice: '', 
-    retailPrice: '', 
+    name: '',
+    sku: '',
+    category: '',
+    unit: 'kg',
+    purchasePrice: '',
+    retailPrice: '',
+    minStock: '',
     supplier: '',
   }
   errorMessage.value = ''
@@ -216,12 +220,13 @@ const resetCreateForm = () => {
 }
 
 const submitCreate = async () => {
-  if (!createForm.value.name || 
-  !createForm.value.sku || 
-  !createForm.value.category || 
-  !createForm.value.supplier
+  if (
+    !createForm.value.name ||
+    !createForm.value.sku ||
+    !createForm.value.category ||
+    !createForm.value.supplier
   ) {
-    errorMessage.value = "Please fill in all required fields"
+    errorMessage.value = 'Please fill in all required fields'
     return
   }
 
@@ -244,6 +249,7 @@ const openEditModal = (product) => {
   editForm.value = {
     purchasePrice: product.PurchasePrice,
     retailPrice: product.RetailPrice,
+    minQuantity: product.MinQuantity || '',
   }
   errorMessage.value = ''
   isEditModalOpen.value = true
@@ -256,9 +262,10 @@ const closeEditModal = () => {
 }
 
 const resetEditForm = () => {
-  editForm.value = { 
-    purchasePrice: '', 
+  editForm.value = {
+    purchasePrice: '',
     retailPrice: '',
+    minQuantity: '',
   }
   errorMessage.value = ''
 }
@@ -354,27 +361,27 @@ onMounted(async () => {
 
     <!-- Filters & Controls -->
     <div class="controls-row">
-        <div class="filters">
-            <select v-model="selectedCategory" @change="onFilterChange" class="filter-select">
-                <option v-for="option in categoryOptions" :key="option.value" :value="option.value">
-                {{ option.label }}
-                </option>
-            </select>
-            <select v-model="selectedStatus" @change="onFilterChange" class="filter-select">
-                <option v-for="option in statusOptions" :key="option.value" :value="option.value">
-                {{ option.label }}
-                </option>
-            </select>
-        </div>
+      <div class="filters">
+        <select v-model="selectedCategory" @change="onFilterChange" class="filter-select">
+          <option v-for="option in categoryOptions" :key="option.value" :value="option.value">
+            {{ option.label }}
+          </option>
+        </select>
+        <select v-model="selectedStatus" @change="onFilterChange" class="filter-select">
+          <option v-for="option in statusOptions" :key="option.value" :value="option.value">
+            {{ option.label }}
+          </option>
+        </select>
+      </div>
 
-        <button 
-             class="secondary-btn btn-create-order" 
-             :disabled="selectedForOrder.length === 0"
-             @click="createOrderFromSelected"
-             :class="{ 'btn-active-order': selectedForOrder.length > 0 }"
-        >
-             Create Order from Selected
-        </button>
+      <button
+        class="secondary-btn btn-create-order"
+        :disabled="selectedForOrder.length === 0"
+        @click="createOrderFromSelected"
+        :class="{ 'btn-active-order': selectedForOrder.length > 0 }"
+      >
+        Create Order from Selected
+      </button>
     </div>
 
     <!-- Data Table -->
@@ -407,13 +414,13 @@ onMounted(async () => {
             </tr>
             <tr v-else v-for="product in filteredProducts" :key="product.SKU">
               <td>
-                  <input 
-                      type="checkbox" 
-                      :value="product.SKU" 
-                      v-model="selectedForOrder"
-                      :disabled="!canSelect(product)"
-                      class="row-checkbox"
-                  >
+                <input
+                  type="checkbox"
+                  :value="product.SKU"
+                  v-model="selectedForOrder"
+                  :disabled="!canSelect(product)"
+                  class="row-checkbox"
+                />
               </td>
               <td class="product-name">{{ product.ProductName }}</td>
               <td>{{ product.SKU }}</td>
@@ -493,7 +500,6 @@ onMounted(async () => {
           </div>
 
           <div class="form-grid">
-            
             <!-- Autocomplete -->
             <label class="field autocomplete-wrapper">
               <span>Category <span class="required">*</span></span>
@@ -505,15 +511,18 @@ onMounted(async () => {
                 @focus="showCategoryDropdown = true"
                 @blur="hideDropdownDelayed"
               />
-              <ul v-if="showCategoryDropdown && filteredCategorySuggestions.length > 0" class="suggestions-list">
-                  <li 
-                      v-for="cat in filteredCategorySuggestions" 
-                      :key="cat"
-                      @click="selectCategorySuggestion(cat)"
-                      class="suggestion-item"
-                  >
-                      {{ cat }}
-                  </li>
+              <ul
+                v-if="showCategoryDropdown && filteredCategorySuggestions.length > 0"
+                class="suggestions-list"
+              >
+                <li
+                  v-for="cat in filteredCategorySuggestions"
+                  :key="cat"
+                  @click="selectCategorySuggestion(cat)"
+                  class="suggestion-item"
+                >
+                  {{ cat }}
+                </li>
               </ul>
             </label>
 
@@ -550,6 +559,20 @@ onMounted(async () => {
                 placeholder="0.00"
               />
             </label>
+          </div>
+
+          <div class="form-grid">
+            <label class="field">
+              <span>Minimum Quantity</span>
+              <input
+                v-model.number="createForm.minStock"
+                type="number"
+                step="1"
+                min="0"
+                placeholder="10"
+              />
+            </label>
+            <div></div>
           </div>
 
           <label class="field">
@@ -614,6 +637,17 @@ onMounted(async () => {
               />
             </label>
           </div>
+
+          <label class="field">
+            <span>Minimum Quantity</span>
+            <input
+              v-model.number="editForm.minQuantity"
+              type="number"
+              step="1"
+              min="0"
+              placeholder="0"
+            />
+          </label>
         </div>
 
         <p v-if="errorMessage" class="error-text">{{ errorMessage }}</p>
