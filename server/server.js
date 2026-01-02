@@ -1,6 +1,7 @@
 import express from 'express'
 import cors from 'cors'
 import dotenv from 'dotenv'
+import { authenticateToken } from './middleware/auth.js'
 import authRoutes from './routes/auth.js'
 import deliveriesRoutes from './routes/deliveries.js'
 import salesRoutes from './routes/sales.js'
@@ -18,11 +19,11 @@ app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 
 app.use('/api/auth', authRoutes)
-app.use('/api/deliveries', deliveriesRoutes)
-app.use('/api/sales', salesRoutes)
-app.use('/api/warehouse', warehouseRoutes)
-app.use('/api/suppliers', suppliersRoutes)
-app.use('/api/employees', employeesRoutes)
+app.use('/api/deliveries', authenticateToken, deliveriesRoutes)
+app.use('/api/sales', authenticateToken, salesRoutes)
+app.use('/api/warehouse', authenticateToken, warehouseRoutes)
+app.use('/api/suppliers', authenticateToken, suppliersRoutes)
+app.use('/api/employees', authenticateToken, employeesRoutes)
 
 app.get('/health', (req, res) => {
     res.json({ status: 'OK' })

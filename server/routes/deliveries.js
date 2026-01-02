@@ -227,6 +227,11 @@ router.put('/:id', async (req, res) => {
 
         if (status && status !== delivery.Status) {
             await connection.execute(
+                'SET @current_employee_id = ?',
+                [req.user.id]
+            )
+
+            await connection.execute(
                 'UPDATE Deliveries SET Status = ? WHERE DeliveryID = ?',
                 [status, deliveryId]
             )
